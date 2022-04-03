@@ -28,7 +28,7 @@ server.get('/', (req, res) => {
   res.send("Hello world");
 })
 
-server.listen(3000);
+server.listen(42069);
 
 let dbConnect = Env.DB_CONNECTION;
 mongoose.connect(dbConnect, () => {
