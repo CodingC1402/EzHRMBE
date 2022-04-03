@@ -20,6 +20,11 @@ export default class UserController {
 	}
 
 	public static async getUser(username: string) {
-		return await UserModel.findOne({ username: username });
+		let user = await UserModel.findOne({ username: username }).lean();
+		if (!user) {
+			return undefined;
+		}
+
+		return user;
 	}
 }

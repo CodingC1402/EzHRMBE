@@ -24,7 +24,10 @@ userRouter.post(CREATE_PATH, async (req, res) => {
 userRouter.get(GET_PATH, async (req, res, next) => {
 	UserController.getUser(req.params.username)
 		.then((value) => {
-			if (value) res.status(Status.OK).json(value);
+			if (value) res.status(Status.OK).json({
+				...value,
+				password: undefined,
+			});
 			else {
 				responseError(res, new Error("User not found"), Status.BAD_REQUEST);
 			}
