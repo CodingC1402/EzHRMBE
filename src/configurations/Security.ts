@@ -1,4 +1,5 @@
 export const IGNORE_PATHS: Array<string> = [
+  "",
   "login",
   "register",
 ];
