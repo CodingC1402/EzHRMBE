@@ -25,7 +25,19 @@ export default class AuthenticateController {
     return user;
   }
 
-  public static async Register(username: string, password: string) {
+  public static async Register(username: string, password: string, email: string) {
+    //Check valid username
+    
 
+    //Check valid password
+
+
+    let user = new UserModel({
+      username: username,
+      password: password,
+      email: email
+    });
+
+    user.save();
   }
 }

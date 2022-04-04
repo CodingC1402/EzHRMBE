@@ -3,6 +3,7 @@ import mongoose from 'mongoose'
 export interface IUser {
   username: string;
   password: string;
+  email: string;
 }
 
 const UserSchema = new mongoose.Schema<IUser>({
@@ -13,6 +14,10 @@ const UserSchema = new mongoose.Schema<IUser>({
   },
   password: {
     type: String,
+    required: true
+  },
+  email: {
+    type : String,
     required: true
   }
 });
