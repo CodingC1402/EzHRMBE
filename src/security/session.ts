@@ -1,11 +1,15 @@
 import { IGNORE_PATHS } from "../configurations/security"
+import { Request } from 'express'
 
-export interface SessionInfo {
-  username: string;
+// Adding to session declaration
+declare module 'express-session' {
+  interface SessionData {
+      username: string;
+  }
 }
 
 export default class SessionAuthentication {
-  public static isAuthenticated(urlStr: string, session: SessionInfo): boolean {
+  public static isAuthenticated(urlStr: string, req: Request): boolean {
     let urlArr = urlStr.split("/");
 
     for (let i = 0; i < IGNORE_PATHS.length; i++) {
@@ -15,7 +19,7 @@ export default class SessionAuthentication {
       }
     }
 
-    if (session.username) {
+    if (req.session.username) {
       return true;
     }
 

@@ -2,42 +2,51 @@ import { DefaultCompany } from "../models/companyModel";
 import { IUser, UserModel } from "../models/userModel";
 import bcrypt from 'bcrypt';
 import { SALT_ROUNDS } from "../configurations/security";
+import { Request, Response, NextFunction } from "express";
+import Status from "../configurations/status";
+import responseMessage from "../utils/responseError";
 
 export default class UserController {
 	public static async createUser(
-		username: string,
-		password: string,
-		email: string,
+		req: Request<{}, {}, {username: string, password: string, email: string}>,
+		res: Response,
+		next: NextFunction
 	) {
+		const {username, password, email} = req.body;
 		let user = await UserModel.findOne({ username: username });
 
 		if (user) {
-			let error = new Error("User already exists");
-			throw error;
+			responseMessage(res, "User already exists", Status.CONFLICT);
+			return;
 		}
 
-		password = bcrypt.hashSync(password, SALT_ROUNDS);
+		const encryptedPassword = bcrypt.hashSync(password, SALT_ROUNDS);
 
 		user = new UserModel({
 			username: username,
-			password: password,
+			password: encryptedPassword,
 			email: email,
 			company: DefaultCompany,
 		});
 		try {
 			let info = await user.save();
-			return info;
-		} catch (error) {
-			throw error;
+			res.status(Status.CREATED).json(info);
+		} catch (err) {
+			//@ts-ignore
+			let error: Error = error;
+			responseMessage(res, error.message, Status.BAD_REQUEST);
 		}
 	}
 
-	public static async getUser(username: string) {
-		let user = await UserModel.findOne({ username: username }).select("-password").lean();
+	public static async getUser(
+		req: Request,
+		res: Response,
+		next: NextFunction) {
+		const user = await UserModel.findOne({ username: req.session.username }).select("-password").lean();
 		if (!user) {
-			throw new Error("User not found");
+			responseMessage(res, "User not found", Status.NOT_FOUND);
 		}
 
-		return user;
+		res.status(Status.OK).send(user);
 	}
 }
