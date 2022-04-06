@@ -5,10 +5,12 @@ export interface SessionInfo {
 }
 
 export default class SessionAuthentication {
-  public static isAuthenticated(url: string, session: SessionInfo): boolean {
+  public static isAuthenticated(urlStr: string, session: SessionInfo): boolean {
+    let urlArr = urlStr.split("/");
+
     for (let i = 0; i < IGNORE_PATHS.length; i++) {
       let path = IGNORE_PATHS[i];
-      if (url.includes(path)) {
+      if (urlArr[1] === path) {
         return true;
       }
     }
