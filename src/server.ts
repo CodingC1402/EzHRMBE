@@ -6,7 +6,9 @@ import session from 'express-session';
 import MongoStore from 'connect-mongo';
 import authenticateRouter from './routes/authenticateRouter';
 import { SESSION_EXPIRE_SPAN } from './configurations/security';
-import bcrypt from 'bcrypt';
+import employeesRouter from './routes/employeesRouter';
+import getPathFromVersion from './utils/pathFromVersion';
+import { ApiVersion } from './configurations/apiVersions';
 
 require('dotenv/config');
 
@@ -34,16 +36,14 @@ server.use(
 
 //Routers
 server.use(authenticateRouter);
+server.use(getPathFromVersion('/employees', ApiVersion.v1), employeesRouter);
 server.get('/', (req, res) => {
   res.send('Hello world');
 });
 
+// Server PORT
 server.listen(42069);
 
 // DB connection
-let dbConnect = Env.DB_CONNECTION;
-mongoose.connect(dbConnect, () => {
-  console.log('Connected to MongoDB...');
-});
-
+mongoose.connect(Env.DB_CONNECTION, () => console.log('Connected to MongoDB...'));
 console.log('Server running...');
