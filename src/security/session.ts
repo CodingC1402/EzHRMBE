@@ -1,4 +1,4 @@
-import { IGNORE_PATHS } from "../configurations/Security"
+import { IGNORE_PATHS } from "../configurations/security"
 
 export interface SessionInfo {
   username: string;

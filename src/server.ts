@@ -1,12 +1,11 @@
 import express from 'express';
 import mongoose from 'mongoose';
-import userRouter from './routes/userRouter';
 import cors from 'cors';
-import Env from './configurations/Env';
+import Env from './configurations/env';
 import session from 'express-session';
 import MongoStore from 'connect-mongo';
 import authenticateRouter from './routes/authenticateRouter';
-import { SESSION_EXPIRE_SPAN } from './configurations/Security';
+import { SESSION_EXPIRE_SPAN } from './configurations/security';
 import bcrypt from 'bcrypt';
 
 require('dotenv/config');
@@ -35,8 +34,6 @@ server.use(
 
 //Routers
 server.use(authenticateRouter);
-server.use('/user', userRouter);
-
 server.get('/', (req, res) => {
   res.send('Hello world');
 });
@@ -50,4 +47,3 @@ mongoose.connect(dbConnect, () => {
 });
 
 console.log('Server running...');
-console.log(bcrypt.hashSync('password123', 12));
