@@ -25,7 +25,12 @@ export const DefaultCompany: ICompany = {
     penaltyType: []
   },
   holidays: [],
-  roles: []
+  roles: [{
+    name: "IT",
+    baseSalary: 10000,
+    paymentPeriod: "Wtf?",
+    otMultiplier: 1.5
+  }]
 };
 
 export const CompanySchema = new mongoose.Schema<ICompany>({

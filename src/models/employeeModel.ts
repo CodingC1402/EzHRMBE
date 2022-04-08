@@ -27,7 +27,7 @@ export const EmployeeSchema = new mongoose.Schema<IEmployee>({
   email: { type: String, required: true },
   phone: { type: String, required: true },
   resignDate: { type: Date, required: false },
-  roleID: { type: mongoose.Schema.Types.ObjectId, required: true },
+  roleID: { type: mongoose.Schema.Types.ObjectId },
   companyID: { type: mongoose.Schema.Types.ObjectId, required: true },
 })
 

@@ -10,7 +10,7 @@ export const REGISTER_PATH: string = "/register";
 export const LOGOUT_PATH: string = "/logout";
 export const PROFILE_PATH: string = "/profile";
 
-const router = express.Router();
+let router = express.Router();
 
 router.use(AuthenticateController.Authorize);
 

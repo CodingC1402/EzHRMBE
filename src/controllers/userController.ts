@@ -29,7 +29,10 @@ export default class UserController {
 			company: DefaultCompany,
 		});
 		try {
-			let info = await user.save();
+			let info = {
+				...(await user.save()).toObject(),
+				password: undefined
+			}
 			res.status(Status.CREATED).json(info);
 		} catch (err) {
 			//@ts-ignore
