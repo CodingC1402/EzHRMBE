@@ -16,14 +16,15 @@
   - DELETE  /logout
   - POST    /register (body: {username, password, email})
   - GET     /profile : Get user info with the company and all sub documents.
+* Employees (/api/v1):
+  - PUT     /employees/:id : Update an employee with **ObjectID**.
+  - POST    /employees/create : Create new employee
+  - DELETE  /employees/:id : Delete employee with **ObjectID**.
+  - GET     /employees/all : Get all employees of the company.
 
 ## Implementing:
 * Employees (/api/v1):
-  - GET     /employees/all : Get all employees of the company.
   - GET     /employees/:id/details : Get details for a specific employees.
-  - PUT     /employees/update/:id : Update an employee with **ObjectID**.
-  - POST    /employees/create : Create new employee
-  - DELETE  /employees/:id : Delete employee with **ObjectID**.
   - GET     /employees/all/details : Get all employees for the company with all of them have full details.
 * Authentication:
   - PUT /change-password/
