@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
 import { ILeave } from "./leavesModel";
 
+const MODEL_NAME = 'employees';
+
 export interface IEmployee {
 	firstName: string;
 	lastName: string;
@@ -29,4 +31,4 @@ export const EmployeeSchema = new mongoose.Schema<IEmployee>({
   companyID: { type: mongoose.Schema.Types.ObjectId, required: true },
 })
 
-export const EmployeeModel = mongoose.model('employees', EmployeeSchema);
+export const EmployeeModel = mongoose.model(MODEL_NAME, EmployeeSchema);

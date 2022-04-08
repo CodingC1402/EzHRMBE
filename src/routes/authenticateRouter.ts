@@ -7,7 +7,6 @@ import responseMessage from '../utils/responseError';
 
 export const LOGIN_PATH: string = "/login";
 export const REGISTER_PATH: string = "/register";
-export const SESSION_ID: string = "session_id";
 export const LOGOUT_PATH: string = "/logout";
 export const PROFILE_PATH: string = "/profile";
 
