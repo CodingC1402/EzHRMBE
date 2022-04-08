@@ -4,6 +4,7 @@ import { IRole } from "./rolesModel";
 import { IRules, RulesSchema } from "./rulesModel";
 
 export interface ICompany {
+  _id?: mongoose.Types.ObjectId;
   name: string;
   address: string;
   phone: string;
