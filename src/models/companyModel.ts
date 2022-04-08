@@ -4,6 +4,7 @@ import { IRole } from "./rolesModel";
 import { IRules, RulesSchema } from "./rulesModel";
 
 export interface ICompany {
+  _id?: mongoose.Types.ObjectId;
   name: string;
   address: string;
   phone: string;
@@ -24,7 +25,12 @@ export const DefaultCompany: ICompany = {
     penaltyType: []
   },
   holidays: [],
-  roles: []
+  roles: [{
+    name: "IT",
+    baseSalary: 10000,
+    paymentPeriod: "Wtf?",
+    otMultiplier: 1.5
+  }]
 };
 
 export const CompanySchema = new mongoose.Schema<ICompany>({

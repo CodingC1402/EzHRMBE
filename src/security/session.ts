@@ -5,6 +5,7 @@ import { Request } from 'express'
 declare module 'express-session' {
   interface SessionData {
       username: string;
+      companyID: string;
   }
 }
 
