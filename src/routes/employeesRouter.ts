@@ -1,7 +1,4 @@
 import express from 'express';
-import SessionAuthentication from '../security/session';
-import Status from '../configurations/status';
-import responseMessage from '../utils/responseError';
 import EmployeeController from '../controllers/employeesController';
 
 export const UPDATE_PATH: string = "/:id";

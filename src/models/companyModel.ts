@@ -27,6 +27,8 @@ export const DefaultCompany: ICompany = {
   holidays: [],
   roles: [{
     name: "IT",
+    idPrefix: "IT",
+    idPostfix: "",
     baseSalary: 10000,
     paymentPeriod: "Wtf?",
     otMultiplier: 1.5

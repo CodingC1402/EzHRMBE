@@ -13,7 +13,7 @@ export const LeaveSchema = new mongoose.Schema<ILeave>({
     startDate: { type: Date, required: true },
     numberOfDays: { type: Number, required: true },
     reason: { type: String, required: true },
-    employeeID: { type: mongoose.Schema.Types.ObjectId, required: true}
+    employeeID: { type: mongoose.Schema.Types.ObjectId, required: true, immutable: true}
 });
 
 export const LeavesModel = mongoose.model("leaves", LeaveSchema);
