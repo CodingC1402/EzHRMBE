@@ -9,6 +9,7 @@ import { SESSION_EXPIRE_SPAN } from './configurations/security';
 import employeesRouter from './routes/employeesRouter';
 import getPathFromVersion from './utils/pathFromVersion';
 import { ApiVersion } from './configurations/apiVersions';
+import leavesRouter from './routes/leavesRouter';
 
 require('dotenv/config');
 
@@ -37,13 +38,11 @@ server.use(
 //Routers
 server.use(authenticateRouter);
 server.use(getPathFromVersion('/employees', ApiVersion.v1), employeesRouter);
+server.use(getPathFromVersion('/leaves', ApiVersion.v1), leavesRouter);
 server.get('/', (req, res) => {
   res.send('Hello world');
 });
 
 // Server PORT
 server.listen(42069);
-
-// DB connection
-mongoose.connect(Env.DB_CONNECTION, () => console.log('Connected to MongoDB...'));
 console.log('Server running...');

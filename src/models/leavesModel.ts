@@ -1,7 +1,20 @@
 import mongoose from 'mongoose';
 
+enum LeaveType {
+    Unpaid = "Unpaid",
+    Sabbatical = "Sabbatical",
+    Compensatory = "Compensatory",
+    Bereavement = "Bereavement",
+    Paternity = "Paternity",
+    Maternity = "Maternity",
+    ReligiousHolidays = "ReligiousHolidays",
+    PublicHolidays = "PublicHolydays",
+    Casual = "Casual",
+    Sick = "Sick"
+}
+
 export interface ILeave {
-    leaveType: string,
+    leaveType: LeaveType,
     startDate: Date,
     numberOfDays: number;
     reason: string;
