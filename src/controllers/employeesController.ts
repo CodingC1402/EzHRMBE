@@ -9,8 +9,8 @@ import responseMessage from "../utils/responseError";
 import { LeavesModel } from "../models/leavesModel";
 import mongoose, { Types } from "mongoose";
 
+const EMPLOYEE_DOESNT_EXIST = "Employee doesn't exists";
 const NO_PERMISSION_MESSAGE = "You don't have permission for this employee";
-const NO_EMPLOYEE_MESSAGE = "The company doesn't have any employee";
 const MIN_ID = 1;
 
 export default class EmployeeController {
@@ -39,7 +39,7 @@ export default class EmployeeController {
     employee
       .save()
       .then((doc) => {
-        res.status(Status.OK).json(doc.toObject());
+        res.status(Status.CREATED).json(doc.toObject());
       })
       .catch((error) => {
         responseMessage(res, error.toString(), Status.BAD_REQUEST);
@@ -109,12 +109,7 @@ export default class EmployeeController {
       employee.leaves = await LeavesModel.find({ employeeID: employee._id }).lean();
     }
 
-    if (!employees || employees.length === 0) {
-      res.status(Status.NOT_FOUND).send();
-      return;
-    }
-
-    EmployeeController.sendOk(res, employees);
+    EmployeeController.sendOk(res, employees || []);
   }
 
   public static async getAllEmployees(req: Request, res: Response) {
@@ -122,12 +117,7 @@ export default class EmployeeController {
       companyID: req.session.companyID,
     }).lean();
 
-    if (!employees || employees.length === 0) {
-      responseMessage(res, NO_EMPLOYEE_MESSAGE, Status.NOT_FOUND);
-      return;
-    }
-
-    EmployeeController.sendOk(res, employees);
+    EmployeeController.sendOk(res, employees || []);
   }
 
   public static async getEmployeeDetail(
@@ -155,5 +145,21 @@ export default class EmployeeController {
 
   public static sendOk(res: Response, result: any) {
     res.status(Status.OK).json(result);
+  }
+
+  // Will check if the req have permission for this employee, if return null then it has already responded with error.
+  public static async checkIfHavePermission(res: Response, employeeID: String, companyID: string) {
+    let employee = await EmployeeModel.findById(employeeID).lean();
+    if (!employee) {
+        responseMessage(res, EMPLOYEE_DOESNT_EXIST, Status.NOT_FOUND);
+        return null;
+    }
+    
+    if (employee.companyID.toString() !== companyID) {
+        responseMessage(res, NO_PERMISSION_MESSAGE, Status.FORBIDDEN);
+        return null;
+    }
+
+    return employee;
   }
 }
