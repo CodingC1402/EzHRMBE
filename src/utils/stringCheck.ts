@@ -25,5 +25,9 @@ export function checkString(str: string, rules: stringCheckRules): boolean {
 
 // Will implement later
 export function checkEmail(str: string) {
-	return true;
+	return str.match(/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/);
+}
+
+export function checkPhone(str: string) {
+	return /^\d+$/.test(str);
 }

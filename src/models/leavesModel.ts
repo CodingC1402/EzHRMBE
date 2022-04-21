@@ -1,7 +1,20 @@
 import mongoose from 'mongoose';
 
+enum LeaveType {
+    Unpaid = "Unpaid",
+    Sabbatical = "Sabbatical",
+    Compensatory = "Compensatory",
+    Bereavement = "Bereavement",
+    Paternity = "Paternity",
+    Maternity = "Maternity",
+    ReligiousHolidays = "ReligiousHolidays",
+    PublicHolidays = "PublicHolydays",
+    Casual = "Casual",
+    Sick = "Sick"
+}
+
 export interface ILeave {
-    leaveType: string,
+    leaveType: LeaveType,
     startDate: Date,
     numberOfDays: number;
     reason: string;
@@ -13,7 +26,7 @@ export const LeaveSchema = new mongoose.Schema<ILeave>({
     startDate: { type: Date, required: true },
     numberOfDays: { type: Number, required: true },
     reason: { type: String, required: true },
-    employeeID: { type: mongoose.Schema.Types.ObjectId, required: true}
+    employeeID: { type: mongoose.Schema.Types.ObjectId, required: true, immutable: true}
 });
 
 export const LeavesModel = mongoose.model("leaves", LeaveSchema);
