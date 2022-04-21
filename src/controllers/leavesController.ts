@@ -4,10 +4,9 @@ import Status from '../configurations/status';
 import { EmployeeModel, IEmployee } from '../models/employeeModel';
 import { ILeave, LeavesModel } from '../models/leavesModel';
 import responseMessage from '../utils/responseError';
+import EmployeeController from './employeesController';
 
 const LEAVE_NOT_FOUND = "Leave not found";
-const EMPLOYEE_DOESNT_EXIST = "Employee doesn't exists";
-const NO_PERMISSION = "You do not have permission for this action";
 
 
 export default class LeavesController {  
@@ -16,20 +15,15 @@ export default class LeavesController {
             ...req.body
         });
 
-        let employee = await EmployeeModel.findById(leave?.employeeID).lean();
-        if (!employee) {
-            responseMessage(res, EMPLOYEE_DOESNT_EXIST, Status.NOT_FOUND);
-            return;
-        }
-        
-        if (employee.companyID.toString() !== req.session.companyID) {
-            responseMessage(res, NO_PERMISSION, Status.FORBIDDEN);
+        //@ts-ignore
+        let companyID: string = req.session.companyID;
+        if (!await EmployeeController.checkIfHavePermission(res, leave?.employeeID.toString(), companyID)) {
             return;
         }
 
         leave.save()
         .then((result) => {
-            res.status(Status.OK).json(result);
+            res.status(Status.CREATED).json(result);
         })
         .catch((err: Error) => {
             responseMessage(res, err.message, Status.FORBIDDEN);
@@ -43,11 +37,9 @@ export default class LeavesController {
             return;
         }
 
-        // Employee can't be null unless change happen no via api.
-        let employee: IEmployee & {_id: mongoose.Types.ObjectId} = await EmployeeModel.findById(leave?.employeeID).lean();
-
-        if (employee.companyID.toString() !== req.session.companyID) {
-            responseMessage(res, NO_PERMISSION, Status.FORBIDDEN);
+        //@ts-ignore
+        let companyID: string = req.session.companyID;
+        if (!await EmployeeController.checkIfHavePermission(res, leave?.employeeID.toString(), companyID)) {
             return;
         }
 
@@ -62,15 +54,24 @@ export default class LeavesController {
             return;
         }
 
-        // Employee can't be null unless change happen no via api.
-        let employee: IEmployee & {_id: mongoose.Types.ObjectId} = await EmployeeModel.findById(leave?.employeeID).lean();
-
-        if (employee.companyID.toString() !== req.session.companyID) {
-            responseMessage(res, NO_PERMISSION, Status.FORBIDDEN);
+        //@ts-ignore
+        let companyID: string = req.session.companyID;
+        if (!await EmployeeController.checkIfHavePermission(res, leave?.employeeID.toString(), companyID)) {
             return;
         }
 
         await leave.update(req.body);
         res.status(Status.OK).json(leave);
+    }
+
+    public static async getAllLeavesOfEmployee(req: Request<{id: string}, {}, ILeave>, res: Response) {
+        //@ts-ignore
+        let companyID: string = req.session.companyID;
+        let employee = await EmployeeController.checkIfHavePermission(res, req.params.id.toString(), companyID);
+
+        if (!employee) return;
+
+        let leaves = LeavesModel.find({employeeID: new mongoose.Types.ObjectId(req.params.id)});
+        res.status(Status.OK).json(leaves || []);
     }
 }
