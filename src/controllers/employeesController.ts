@@ -123,6 +123,11 @@ export default class EmployeeController {
         employee.leaves = await LeavesModel.find({
           employeeID: employee._id,
         }).lean();
+
+        /**
+         * ADD ALL OTHER DETAIL HERE
+         */
+
       }
 
       EmployeeController.sendOk(res, employees || []);
@@ -157,6 +162,11 @@ export default class EmployeeController {
       employee.leaves = await LeavesModel.find({
         employeeID: employee._id,
       }).lean();
+    
+      //
+      // Add other details here
+      //
+
       EmployeeController.sendOk(res, employee);
     }
   );

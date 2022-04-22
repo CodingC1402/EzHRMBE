@@ -7,7 +7,9 @@
     "test": "jest",
     "start": "ts-node src/server.ts",
     "dev": "nodemon --exec npx ts-node ./src/server.ts",
-    "compile": "tsc -p tsconfig.json"
+    "compile": "tsc -p tsconfig.json",
+    "debug_break": "nodemon --watch ./src/* -e ts --exec node --inspect-brk -r ts-node/register ./src/server.ts",
+    "debug": "nodemon --watch ./src/* -e ts --exec node --inspect -r ts-node/register ./src/server.ts"
   },
   "author": "",
   "license": "ISC",

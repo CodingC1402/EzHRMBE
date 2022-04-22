@@ -10,7 +10,7 @@ export const GET_ALL_PATH_DETAILS: string = "/all/details";
 
 let router = express.Router();
 
-router.get(GET_ALL_PATH_DETAILS, )
+router.get(GET_ALL_PATH_DETAILS, EmployeeController.getAllEmployeesDetails)
 router.get(GET_ALL_PATH, EmployeeController.getAllEmployees);
 router.get(GET_DETAILS_PATH, EmployeeController.getEmployeeDetail);
 
