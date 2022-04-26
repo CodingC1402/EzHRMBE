@@ -4,8 +4,47 @@ import { Request, Response } from "express";
 import { IRules } from "../models/rulesModel";
 import Status from '../configurations/status';
 import responseMessage from "../utils/responseError";
+import { EmployeeModel } from "../models/employeeModel";
 
 export default class ClockInController {
+
+    public static async getAllClockInsByCompanyID(req: Request<{}, {}, {companyID: string}>, res: Response) {
+        let employeeIDs = await EmployeeModel.find({
+            companyID: req.body.companyID
+        }, '_id');
+
+        let clockIns = await ClockInModel.find({
+            employeeID: {
+                $in: employeeIDs
+            }
+        });
+
+        res.status(Status.OK).json(clockIns);
+    }
+
+    public static async getAllClockInsByEmployeeWorkID(
+        req: Request<{}, {}, {companyID: string, employeeWorkID: string}>, 
+        res: Response
+    ) {
+        let employeeID = await EmployeeModel.find({
+            workID: req.body.employeeWorkID,
+            companyID: req.body.companyID
+        });
+        
+        let clockIns = await ClockInModel.find({
+            employeeID: employeeID
+        });
+
+        res.status(Status.OK).json(clockIns);
+    }
+
+    public static async getAllClockInsByEmployeeID(req: Request<{}, {}, {employeeID: string}>, res: Response) {
+        let clockIns = await ClockInModel.find({
+            employeeID: req.body.employeeID
+        });
+
+        res.status(Status.OK).json(clockIns);
+    }
 
     /**
      * **NOTE:** The client will determine whether the employee is late or not and send the result to the server, who processes accordingly
@@ -51,23 +90,38 @@ export default class ClockInController {
             return;
         }
 
-        let otWorkMinSigned = req.body.clockIn.clockedOut.getMinutes() - req.body.rules.endWork.getMinutes();
-        let normalWorkMinutes = req.body.rules.endWork.getMinutes() + (otWorkMinSigned > 0 ? 0 : otWorkMinSigned);
-
-        let updated = await ClockInModel.findOneAndUpdate({
+        let clockIn = await ClockInModel.findOne({
             clockedIn: req.body.clockIn.clockedIn,
             employeeID: req.body.clockIn.employeeID
-        }, {
-            clockedOut: req.body.clockIn.clockedOut,
-            normalWorkHours: normalWorkMinutes / 60,
-            otWorkHours: otWorkMinSigned > 0 ? otWorkMinSigned : 0 
-        }, {new: true});
+        });
 
-        if (!updated) {
+        if (!clockIn) {
             responseMessage(res, 'Requested clock in not found', Status.NOT_FOUND);
             return;
         }
-        
+        if (clockIn.clockedOut) {
+            responseMessage(res, 'Clock out time for employee already recorded.', Status.FOUND);
+            return;
+        }
+
+        let otWorkMinSigned = req.body.clockIn.clockedOut.getMinutes() - req.body.rules.endWork.getMinutes();
+        let normalWorkMinutes = req.body.rules.endWork.getMinutes() + (otWorkMinSigned > 0 ? 0 : otWorkMinSigned);
+
+        let updated = await ClockInModel
+            .findOneAndUpdate({
+                clockedIn: req.body.clockIn.clockedIn,
+                employeeID: req.body.clockIn.employeeID
+            }, {
+                clockedOut: req.body.clockIn.clockedOut,
+                normalWorkHours: normalWorkMinutes / 60,
+                otWorkHours: otWorkMinSigned > 0 ? otWorkMinSigned : 0 
+            }, {
+                new: true
+            })
+            .catch((error: Error) => {
+                responseMessage(res, error.message, Status.BAD_REQUEST);
+            });
+
         res.status(Status.OK).json(updated);
     }
 

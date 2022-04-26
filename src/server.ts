@@ -10,6 +10,7 @@ import employeesRouter from './routes/employeesRouter';
 import getPathFromVersion from './utils/pathFromVersion';
 import { ApiVersion } from './configurations/apiVersions';
 import leavesRouter from './routes/leavesRouter';
+import clockInRouter from './routes/clockInRouter';
 
 require('dotenv/config');
 
@@ -39,6 +40,7 @@ server.use(
 server.use(authenticateRouter);
 server.use(getPathFromVersion('/employees', ApiVersion.v1), employeesRouter);
 server.use(getPathFromVersion('/leaves', ApiVersion.v1), leavesRouter);
+server.use(getPathFromVersion('/clockIns', ApiVersion.v1), clockInRouter);
 server.get('/', (req, res) => {
   res.send('Hello world');
 });
