@@ -5,45 +5,52 @@ import { IRules } from "../models/rulesModel";
 import Status from '../configurations/status';
 import responseMessage from "../utils/responseError";
 import { EmployeeModel } from "../models/employeeModel";
+import { handleError } from "../utils/responseError";
 
 export default class ClockInController {
 
     public static async getAllClockInsByCompanyID(req: Request<{comid: string}>, res: Response) {
-        let employeeIDs = await EmployeeModel.find({
-            companyID: req.params.comid
-        }, '_id');
-
-        let clockIns = await ClockInModel.find({
-            employeeID: {
-                $in: employeeIDs
-            }
-        });
-
-        res.status(Status.OK).json(clockIns);
+        try {
+            let employeeIDs = await EmployeeModel.find({
+                companyID: req.params.comid
+            }, '_id');
+    
+            let clockIns = await ClockInModel.find({
+                employeeID: {
+                    $in: employeeIDs
+                }
+            });
+    
+            res.status(Status.OK).json(clockIns);
+        } catch (error) { handleError(res, error as Error); }
     }
 
     public static async getAllClockInsByEmployeeWorkID(
         req: Request<{comid: string, wokid: string}>, 
         res: Response
     ) {
-        let employeeID = await EmployeeModel.find({
-            workID: req.params.wokid,
-            companyID: req.params.comid
-        });
-        
-        let clockIns = await ClockInModel.find({
-            employeeID: employeeID
-        });
-
-        res.status(Status.OK).json(clockIns);
+        try {
+            let employeeID = await EmployeeModel.find({
+                workID: req.params.wokid,
+                companyID: req.params.comid
+            });
+            
+            let clockIns = await ClockInModel.find({
+                employeeID: employeeID
+            });
+    
+            res.status(Status.OK).json(clockIns);
+        } catch (error) { handleError(res, error as Error); }
     }
 
     public static async getAllClockInsByEmployeeID(req: Request<{empid: string}>, res: Response) {
-        let clockIns = await ClockInModel.find({
-            employeeID: req.params.empid
-        });
-
-        res.status(Status.OK).json(clockIns);
+        try {
+            let clockIns = await ClockInModel.find({
+                employeeID: req.params.empid
+            });
+    
+            res.status(Status.OK).json(clockIns);
+        } catch (error) { handleError(res, error as Error); }
     }
 
     /**
@@ -51,33 +58,36 @@ export default class ClockInController {
      * @param req: the request has a bool *late* to indicate whether the employee was late
      */
     public static async createClockIn(req: Request<{}, {}, {employeeID: string, late: boolean}>, res: Response) {
-        let existing = await ClockInModel.findOne({
-            clockedIn: {
-                $gt: new Date(new Date().setHours(0,0,0,0))
-            },
-            employeeID: req.body.employeeID
-        });
-
-        if (existing) {
-            responseMessage(res, 'Employee has already clocked in today.', Status.CONFLICT, {existingClockIn: {...existing}});
-            return;
-        }
-
-        let clockIn = new ClockInModel({
-            clockedIn: new Date(),
-            employeeID: req.body.employeeID,
-        });
-        await clockIn.save();
-
-        if (req.body.late) {
-            let penalty = new PenaltyModel({
-                type: 'Late',
-                employeeID: req.body.employeeID,
-                occurredAt: clockIn.clockedIn,
+        try {
+            let existing = await ClockInModel.findOne({
+                clockedIn: {
+                    $gt: new Date(new Date().setHours(0,0,0,0))
+                },
+                employeeID: req.body.employeeID
             });
-            await penalty.save();
-        }
-        res.status(Status.OK).json(clockIn);
+    
+            if (existing) {
+                responseMessage(res, 'Employee has already clocked in today.', Status.CONFLICT, {existingClockIn: {...existing}});
+                return;
+            }
+    
+            let clockIn = new ClockInModel({
+                clockedIn: new Date(),
+                late: req.body.late,
+                employeeID: req.body.employeeID,
+            });
+            await clockIn.save();
+    
+            if (req.body.late) {
+                let penalty = new PenaltyModel({
+                    type: 'Late',
+                    employeeID: req.body.employeeID,
+                    occurredAt: clockIn.clockedIn,
+                });
+                await penalty.save();
+            }
+            res.status(Status.OK).json(clockIn);
+        } catch (error) { handleError(res, error as Error); }
     }
 
     /**
@@ -90,21 +100,23 @@ export default class ClockInController {
             return;
         }
 
-        let clockIn = await ClockInModel.findOne({
-            clockedIn: {
-                $gt: new Date(new Date().setHours(0,0,0,0))
-            },
-            employeeID: req.params.empid
-        });
-
-        if (!clockIn) {
-            responseMessage(res, 'Requested clock in not found', Status.NOT_FOUND);
-            return;
-        }
-        if (clockIn.clockedOut) {
-            responseMessage(res, 'Clock out time for employee already recorded.', Status.FOUND);
-            return;
-        }
+        try {
+            let clockIn = await ClockInModel.findOne({
+                clockedIn: {
+                    $gt: new Date(new Date().setHours(0,0,0,0))
+                },
+                employeeID: req.params.empid
+            });
+    
+            if (!clockIn) {
+                responseMessage(res, 'Requested clock in not found', Status.NOT_FOUND);
+                return;
+            }
+            if (clockIn.clockedOut) {
+                responseMessage(res, 'Clock out time for employee already recorded.', Status.FOUND);
+                return;
+            }
+        } catch (error) { handleError(res, error as Error); return; }
 
         let end = new Date(req.body.rules.endWork);
         let start = new Date(req.body.rules.startWork);
@@ -113,11 +125,12 @@ export default class ClockInController {
         endWorkDT.setHours(end.getHours(), end.getMinutes(), end.getSeconds());
         startWorkDT.setHours(start.getHours(), start.getMinutes(), start.getSeconds());
 
-        let clockedOutDT = new Date(req.body.clockIn.clockedOut);
-        let otWorkMinSigned = clockedOutDT.getTime() - endWorkDT.getTime();
-        let normalWorkMinutes = endWorkDT.getTime() + (otWorkMinSigned > 0 ? 0 : otWorkMinSigned) - startWorkDT.getTime();
+        let accountedStart = Math.max(startWorkDT.getTime(), new Date(req.body.clockIn.clockedIn).getTime());
+        let otWorkTimeSigned = new Date(req.body.clockIn.clockedOut).getTime() - endWorkDT.getTime();
+        let normalWorkHours = (endWorkDT.getTime() + (otWorkTimeSigned > 0 ? 0 : otWorkTimeSigned) - accountedStart) / 3600000;
 
-        let updated = await ClockInModel
+        try {
+            let updated = await ClockInModel
             .findOneAndUpdate({
                 clockedIn: {
                     $gt: new Date(new Date().setHours(0,0,0,0))
@@ -125,17 +138,12 @@ export default class ClockInController {
                 employeeID: req.params.empid
             }, {
                 clockedOut: req.body.clockIn.clockedOut,
-                normalWorkHours: normalWorkMinutes / 3600000,
-                otWorkHours: otWorkMinSigned > 0 ? otWorkMinSigned : 0 
-            }, {
-                new: true
-            })
-            .catch((error: Error) => {
-                responseMessage(res, error.message, Status.BAD_REQUEST);
-            });
+                normalWorkHours: normalWorkHours,
+                otWorkHours: otWorkTimeSigned > 0 ? otWorkTimeSigned / 3600000 : 0 
+            }, { new: true });
 
-        console.log(new Date().getTimezoneOffset());
-        res.status(Status.OK).json(updated);
+            res.status(Status.OK).json(updated);
+        } catch (error) { handleError(res, error as Error); }
     }
 
     public static async deleteClockIn(req: Request<{empid: string}, {}, IClockIn>, res: Response) {
@@ -144,12 +152,27 @@ export default class ClockInController {
             return;
         }
 
-        let result = await ClockInModel.deleteOne({
-            clockedIn: {
-                $gt: new Date(new Date().setHours(0,0,0,0))
-            },
-            employeeID: req.params.empid
-        });
-        res.status(Status.OK).json({ ...result });
+        try {
+            let deletedClockIn = await ClockInModel.findOneAndDelete({
+                clockedIn: {
+                    $gt: new Date(new Date().setHours(0,0,0,0))
+                },
+                employeeID: req.params.empid
+            });
+    
+            let deleteCount = 0;
+            if (deletedClockIn) {
+                deleteCount = 1;
+                if (deletedClockIn.late) {
+                    await PenaltyModel.deleteOne({
+                        type: 'Late',
+                        occurredAt: deletedClockIn.clockedIn,
+                        employeeID: deletedClockIn.employeeID
+                    });
+                }
+            }
+    
+            res.status(Status.OK).json({ deleteCount });
+        } catch (error) { handleError(res, error as Error); }
     }
 }

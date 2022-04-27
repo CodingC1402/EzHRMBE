@@ -22,7 +22,7 @@ export const DefaultCompany: ICompany = {
     endWork: Time.createTimeWithUTC0(7, 30, 0, ),
     allowedLateTime: Time.createTimeWithUTC0(0, 30, 0),
     maxLateTime: Time.createTimeWithUTC0(0, 30, 0),
-    penaltyType: []
+    penaltyType: ['Late', 'Absent']
   },
   holidays: [],
   roles: [{
