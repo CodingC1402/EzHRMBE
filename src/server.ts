@@ -11,7 +11,8 @@ import employeesRouter from './routes/employeesRouter';
 import getPathFromVersion from './utils/pathFromVersion';
 import { ApiVersion } from './configurations/apiVersions';
 import leavesRouter from './routes/leavesRouter';
-import clockInRouter from './routes/clockInRouter';
+import router from './routes/clockInRouter';
+import penaltyRouter from './routes/penaltyRouter';
 
 require('dotenv/config');
 
@@ -41,7 +42,8 @@ server.use(
 server.use(authenticateRouter);
 server.use(getPathFromVersion('/employees', ApiVersion.v1), employeesRouter);
 server.use(getPathFromVersion('/leaves', ApiVersion.v1), leavesRouter);
-server.use(getPathFromVersion('/clockins', ApiVersion.v1), clockInRouter);
+server.use(getPathFromVersion('/clockins', ApiVersion.v1), router);
+server.use(getPathFromVersion('/penalties', ApiVersion.v1), penaltyRouter);
 server.get('/', (req, res) => {
   res.send('Hello world');
 });
