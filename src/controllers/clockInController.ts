@@ -1,4 +1,4 @@
-import { IClockIn, ClockInModel } from "../models/clockIns";
+import { IClockIn, ClockInModel } from "../models/clockInModel";
 import { PenaltyModel } from "../models/penaltiesModel";
 import { Request, Response } from "express";
 import { IRules } from "../models/rulesModel";
