@@ -13,6 +13,7 @@ import { ApiVersion } from './configurations/apiVersions';
 import leavesRouter from './routes/leavesRouter';
 import router from './routes/clockInRouter';
 import penaltyRouter from './routes/penaltyRouter';
+import dailyTask from './tasks/dailyClockTask';
 
 require('dotenv/config');
 
@@ -53,5 +54,7 @@ server.listen(42069);
 Connection
     .openConnection()
     .then(() => {
+      dailyTask.start();
+      console.log('Daily task started.');
       console.log('Server running...');
     });
