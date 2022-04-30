@@ -1,7 +1,6 @@
 import { IClockIn, ClockInModel } from "../models/clockInModel";
 import { PenaltyModel } from "../models/penaltiesModel";
 import { Request, response, Response } from "express";
-import { IRules } from "../models/rulesModel";
 import Status from '../configurations/status';
 import responseMessage from "../utils/responseError";
 import { EmployeeModel } from "../models/employeeModel";
@@ -54,10 +53,6 @@ export default class ClockInController {
         } catch (error) { handleError(res, error as Error); }
     }
 
-    /**
-     * **NOTE:** The client will determine whether the employee is late or not and send the result to the server, who processes accordingly
-     * @param req: the request has a bool *late* to indicate whether the employee was late
-     */
     public static async createClockIn(req: Request<{}, {}, {employeeID: string}>, res: Response) {
         try {
             let employee = await EmployeeModel.findOne({ _id: req.body.employeeID });
@@ -107,13 +102,17 @@ export default class ClockInController {
                 });
                 await penalty.save();
             }
-            res.status(Status.OK).json(clockIn);
+            res.status(Status.CREATED).json(clockIn);
         } catch (error) { handleError(res, error as Error); }
     }
 
     public static async updateClockIn(req: Request<{empid: string}, {}, {clockIn: IClockIn, userID: string}>, res: Response) {
         if (!req.body.clockIn.clockedOut) {
-            responseMessage(res, 'Clock out time is required.', Status.BAD_REQUEST);
+            responseMessage(
+                res, 
+                'Clock out time is required.', 
+                Status.BAD_REQUEST
+            );
             return;
         }
 
@@ -122,7 +121,11 @@ export default class ClockInController {
                 _id: req.body.userID
             });
             if (!user) {
-                responseMessage(res, 'User with such ID not found', Status.NOT_FOUND);
+                responseMessage(
+                    res, 
+                    'User with such ID not found', 
+                    Status.NOT_FOUND
+                );
                 return;
             }
 
@@ -135,11 +138,20 @@ export default class ClockInController {
             });
     
             if (!clockIn) {
-                responseMessage(res, 'Requested clock in not found', Status.NOT_FOUND);
+                responseMessage(
+                    res, 
+                    'Requested clock in not found', 
+                    Status.NOT_FOUND
+                );
                 return;
             }
             if (clockIn.clockedOut) {
-                responseMessage(res, 'Clock out time for employee already recorded.', Status.FOUND, {clockIn: clockIn});
+                responseMessage(
+                    res, 
+                    'Clock out time for employee already recorded.', 
+                    Status.FOUND, 
+                    { clockIn: clockIn }
+                );
                 return;
             }
 
@@ -147,12 +159,26 @@ export default class ClockInController {
             let start = new Date(rules.startWork);
             let endWorkToday = new Date();
             let startWorkToday = new Date();
-            endWorkToday.setHours(end.getHours(), end.getMinutes(), end.getSeconds());
-            startWorkToday.setHours(start.getHours(), start.getMinutes(), start.getSeconds());
+            endWorkToday.setHours(
+                end.getHours(), 
+                end.getMinutes(), 
+                end.getSeconds()
+            );
+            startWorkToday.setHours(
+                start.getHours(),
+                start.getMinutes(),
+                start.getSeconds()
+            );
 
-            let clockedStart = Math.max(startWorkToday.getTime(), new Date(req.body.clockIn.clockedIn).getTime());
+            let clockedStart = Math.max(
+                startWorkToday.getTime(), 
+                new Date(req.body.clockIn.clockedIn).getTime()
+            );
             let otWorkTimeSigned = new Date(req.body.clockIn.clockedOut).getTime() - endWorkToday.getTime();
-            let normalWorkHours = (endWorkToday.getTime() + (otWorkTimeSigned > 0 ? 0 : otWorkTimeSigned) - clockedStart) / 3600000;
+            let normalWorkHours = (
+                endWorkToday.getTime()
+                + (otWorkTimeSigned > 0 ? 0 : otWorkTimeSigned) 
+                - clockedStart) / 3600000;
 
             let updated = await ClockInModel
                 .findOneAndUpdate({
