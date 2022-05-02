@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-enum LeaveType {
+export enum LeaveType {
     Unpaid = "Unpaid",
     Sabbatical = "Sabbatical",
     Compensatory = "Compensatory",
@@ -8,7 +8,7 @@ enum LeaveType {
     Paternity = "Paternity",
     Maternity = "Maternity",
     ReligiousHolidays = "ReligiousHolidays",
-    PublicHolidays = "PublicHolydays",
+    PublicHolidays = "PublicHolidays",
     Casual = "Casual",
     Sick = "Sick"
 }

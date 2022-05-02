@@ -1,9 +1,10 @@
 import cron from 'node-cron';
 import { ClockInModel } from "../models/clockInModel";
 import { EmployeeModel } from '../models/employeeModel';
+import { LeavesModel, LeaveType } from '../models/leavesModel';
 import { PenaltyModel } from "../models/penaltiesModel";
 
-let task = cron.schedule('0 0 0 * * *', async () => {
+let task = cron.schedule('*/10 * * * * *' /* '0 0 0 * * *' */, async () => {
     // This can use some logging
 
     // 1 - clock out all employees who haven't
@@ -19,7 +20,41 @@ let task = cron.schedule('0 0 0 * * *', async () => {
         yesterday.setDate(yesterday.getDate() - 1);
         yesterday.setHours(0,0,0,0);
     try {
-        let attendants = await ClockInModel.aggregate([
+        // ---THIS IS FOR WHEN HOLIDAY HAS BEEN MERGED---
+        
+        // let holidays = await ClockInModel.find({
+        //     $or: [{
+        //         $and: [
+        //             { startDate: { $lte: yesterday } },
+        //             { $expr: {
+        //                 $gt: [
+        //                     { $dateAdd: { 
+        //                         startDate: '$startDate', 
+        //                         unit: 'day', 
+        //                         amount: '$numOfDays' 
+        //                     } },
+        //                     yesterday
+        //                 ]
+        //             } }
+        //         ]},
+        //         {
+        //             startDate: { 
+        //                 $expr: { 
+        //                     $eq: new Date(yesterday).setFullYear(
+        //                         { $year: { date: '$startDate' } } as unknown as number
+        //                     ) 
+        //                 } 
+        //             },
+        //             repeatYearly: true
+        //         }
+        //     ]
+        // });
+        // if (holidays) {
+        //     console.log(`${new Date().toLocaleDateString()} is part of a holiday, no absent check will be performed.`);
+        //     return;
+        // }
+
+        let attendantIDs = await ClockInModel.aggregate([
             { $match: { 
                 clockedIn: { $gt: yesterday }
              } },
@@ -27,20 +62,42 @@ let task = cron.schedule('0 0 0 * * *', async () => {
             { $project: { _id: true } }
         ]);
         let absentees = await EmployeeModel.find({
-            _id: { $nin: attendants }
+            _id: { $nin: attendantIDs }
         });
         
-        yesterday.setHours(23, 59, 0);
+        yesterday.setHours(23, 59, 0); // so that penalty.occurredAt will be at 23:59:00 yesterday
         console.log(`${new Date().toLocaleDateString()} absent penalty list: [`);
-        absentees.forEach(async (employee) => {
+        for (let employee of absentees) {
+            let leaves = await LeavesModel.find({
+                $and: [
+                    {
+                        employeeID: employee.id,
+                        leaveType: { $ne: LeaveType.Unpaid },
+                        startDate: { $lte: yesterday },
+                    },
+                    { $expr: {
+                        $gt: [
+                            { $dateAdd: { 
+                                startDate: '$startDate', 
+                                unit: 'day', 
+                                amount: '$numberOfDays' 
+                            } },
+                            yesterday
+                        ]
+                    } }
+                ]
+            });
+            if (leaves.length) continue;
+
             let pen = new PenaltyModel({
                 type: 'Absent',
                 employeeID: employee.id,
                 occurredAt: yesterday
             });
+            // ---UNCOMMENT IN PRODUCTION---
             // await pen.save();
             console.log(pen);
-        });
+        }
         console.log(']');
     } catch (error) { logError('function', 'processing absense penalty'); }
 
