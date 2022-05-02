@@ -116,7 +116,7 @@ export default class LeavesController {
       if (!employee) return;
 
       let leaves = await LeavesModel.find({
-        employeeID: new mongoose.Types.ObjectId(req.params.id),
+        employeeID: req.params.id,
       });
       res.status(Status.OK).json(leaves || []);
     }
