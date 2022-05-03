@@ -41,7 +41,7 @@ server.use(
 );
 
 //Routers
-server.use(authenticateRouter);
+// server.use(authenticateRouter);
 server.use(getPathFromVersion("/employees", ApiVersion.v1), employeesRouter);
 server.use(getPathFromVersion("/leaves", ApiVersion.v1), leavesRouter);
 server.use(getPathFromVersion("/clockins", ApiVersion.v1), router);

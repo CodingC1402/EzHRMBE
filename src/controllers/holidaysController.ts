@@ -1,7 +1,7 @@
 import { Response, Request } from "express";
 import Status from "../configurations/status";
 import { controller } from "../database/controller";
-import { IHoliday, HolidaysModel } from "../models/holidayModel";
+import { IHoliday, HolidayModel } from "../models/holidayModel";
 import responseMessage from "../utils/responseError";
 
 const HOLIDAY_NOT_FOUND = "Holiday not found";
@@ -9,7 +9,7 @@ const HOLIDAY_NOT_FOUND = "Holiday not found";
 export default class HolidaysController {
   public static readonly createHoliday = controller.createFunction(
     async function (req: Request<{}, {}, IHoliday>, res: Response) {
-      let holiday = new HolidaysModel({
+      let holiday = new HolidayModel({
         ...req.body,
       });
 
@@ -26,7 +26,7 @@ export default class HolidaysController {
 
   public static readonly deleteHoliday = controller.createFunction(
     async function (req: Request<{ id: string }, {}, IHoliday>, res: Response) {
-      let holiday = await HolidaysModel.findById(req.params.id);
+      let holiday = await HolidayModel.findById(req.params.id);
       if (!holiday) {
         responseMessage(res, HOLIDAY_NOT_FOUND, Status.NOT_FOUND);
         return;
@@ -38,12 +38,12 @@ export default class HolidaysController {
 
   public static readonly updateHoliday = controller.createFunction(
     async function (req: Request<{ id: string }, {}, IHoliday>, res: Response) {
-      let holiday = await HolidaysModel.findById(req.params.id);
+      let holiday = await HolidayModel.findById(req.params.id);
       if (!holiday) {
         responseMessage(res, HOLIDAY_NOT_FOUND, Status.NOT_FOUND);
         return;
       }
-      await HolidaysModel.findOneAndUpdate({ _id: holiday._id }, req.body)
+      await HolidayModel.findOneAndUpdate({ _id: holiday._id }, req.body)
         .then(() => {
           res.status(Status.OK).json(holiday);
         })
@@ -54,7 +54,7 @@ export default class HolidaysController {
   );
   public static readonly getHolidayByID = controller.createFunction(
     async function (req: Request<{ id: string }, {}, IHoliday>, res: Response) {
-      let holiday = await HolidaysModel.findById(req.params.id)
+      let holiday = await HolidayModel.findById(req.params.id)
         .then((result) => {
           if (!result) {
             responseMessage(res, HOLIDAY_NOT_FOUND, Status.NOT_FOUND);
@@ -70,7 +70,7 @@ export default class HolidaysController {
 
   public static readonly getAllHolidays = controller.createFunction(
     async function (req: Request, res: Response) {
-      let holidays: IHoliday[] = await HolidaysModel.find({
+      let holidays: IHoliday[] = await HolidayModel.find({
         companyID: req.session.companyID,
       }).lean();
 
