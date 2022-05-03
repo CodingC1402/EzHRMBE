@@ -1,17 +1,17 @@
 import mongoose from "mongoose";
 
 export interface IHoliday {
-  nameHoliday: string;
+  name: string;
   startDate: Date;
-  numberOfDayOff: number;
-  repeat: boolean;
+  numberOfDaysOff: number;
+  repeatYearly: boolean;
 }
 
 export const HolidaySchema = new mongoose.Schema<IHoliday>({
-  nameHoliday: { type: String, required: true },
+  name: { type: String, required: true },
   startDate: { type: Date, required: true },
-  numberOfDayOff: { type: Number, required: true },
-  repeat: { type: Boolean, required: true },
+  numberOfDaysOff: { type: Number, required: true },
+  repeatYearly: { type: Boolean, required: true },
 });
 
-export const HolidaysModel = mongoose.model("holidays", HolidaySchema);
+export const HolidayModel = mongoose.model("holidays", HolidaySchema);

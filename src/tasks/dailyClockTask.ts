@@ -3,7 +3,9 @@ import { ClockInModel } from "../models/clockInModel";
 import { EmployeeModel } from '../models/employeeModel';
 import { LeavesModel, LeaveType } from '../models/leavesModel';
 import { PenaltyModel } from "../models/penaltiesModel";
+import { HolidayModel } from "../models/holidayModel";
 
+// change timestamp back to 00:00:00 in production, now running once per 10 seconds for testing purposes
 let task = cron.schedule('*/10 * * * * *' /* '0 0 0 * * *' */, async () => {
     // This can use some logging
 
@@ -20,40 +22,46 @@ let task = cron.schedule('*/10 * * * * *' /* '0 0 0 * * *' */, async () => {
         yesterday.setDate(yesterday.getDate() - 1);
         yesterday.setHours(0,0,0,0);
     try {
-        // ---THIS IS FOR WHEN HOLIDAY HAS BEEN MERGED---
-        
-        // let holidays = await ClockInModel.find({
-        //     $or: [{
-        //         $and: [
-        //             { startDate: { $lte: yesterday } },
-        //             { $expr: {
-        //                 $gt: [
-        //                     { $dateAdd: { 
-        //                         startDate: '$startDate', 
-        //                         unit: 'day', 
-        //                         amount: '$numOfDays' 
-        //                     } },
-        //                     yesterday
-        //                 ]
-        //             } }
-        //         ]},
-        //         {
-        //             startDate: { 
-        //                 $expr: { 
-        //                     $eq: new Date(yesterday).setFullYear(
-        //                         { $year: { date: '$startDate' } } as unknown as number
-        //                     ) 
-        //                 } 
-        //             },
-        //             repeatYearly: true
-        //         }
-        //     ]
-        // });
-        // if (holidays) {
-        //     console.log(`${new Date().toLocaleDateString()} is part of a holiday, no absent check will be performed.`);
-        //     return;
-        // }
+        let holidays = await HolidayModel.find({
+            $or: [
+                { $and: [
+                    { startDate: { $lte: yesterday } },
+                    { $expr: {
+                        $gt: [
+                            { $dateAdd: { 
+                                startDate: '$startDate', 
+                                unit: 'day', 
+                                amount: '$numberOfDaysOff' 
+                            } },
+                            yesterday
+                        ]
+                    } }
+                ]},
+                { $and: [
+                    { $expr: { 
+                        $eq: [
+                            '$startDate',
+                            { $dateFromParts : {
+                                year: { $year: '$startDate' }, 
+                                month: yesterday.getMonth() + 1, 
+                                day: yesterday.getDate(),
+                                timezone: '+0700'
+                            } }
+                        ]
+                    } },
+                    { repeatYearly: true }
+                ] }
+            ]
+        });
+        if (holidays.length) {
+            console.log(`${yesterday.toLocaleDateString()} is part of a holiday, no absent check will be performed. Holidays details:`);
+            console.log(holidays);
+            compileClockInReport();
+            return;
+        }
+    } catch (error) { logError('HolidayModel.find()', 'Holiday check', error); }
 
+    try {
         let attendantIDs = await ClockInModel.aggregate([
             { $match: { 
                 clockedIn: { $gt: yesterday }
@@ -66,7 +74,7 @@ let task = cron.schedule('*/10 * * * * *' /* '0 0 0 * * *' */, async () => {
         });
         
         yesterday.setHours(23, 59, 0); // so that penalty.occurredAt will be at 23:59:00 yesterday
-        console.log(`${new Date().toLocaleDateString()} absent penalty list: [`);
+        console.log(`${yesterday.toLocaleDateString()} absent penalty list: [`);
         for (let employee of absentees) {
             let leaves = await LeavesModel.find({
                 $and: [
@@ -99,16 +107,22 @@ let task = cron.schedule('*/10 * * * * *' /* '0 0 0 * * *' */, async () => {
             console.log(pen);
         }
         console.log(']');
-    } catch (error) { logError('function', 'processing absense penalty'); }
+    } catch (error) { logError('various functions', 'processing absence penalty', error); }
 
     // 3 - update monthly report on clock in/out
-
+    compileClockInReport();
 });
 
-function logError(fn?: string, phase?: string): void {
+function compileClockInReport() {
+    // compile monthly clock in reports
+    //
+}
+
+function logError(fn?: string, phase?: string, error?: any): void {
     let phaseDesc = phase ? ` during ${phase}` : '';
     let fnDesc = fn ? ` while executing ${fn}` : '';
-    console.log(`Error occurred` + fnDesc + phaseDesc + '.');
+    console.log(`Error occurred` + fnDesc + phaseDesc + '. Details:');
+    console.log(error);
 }
 
 export default task;

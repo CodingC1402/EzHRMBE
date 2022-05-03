@@ -1,6 +1,6 @@
 import { IClockIn, ClockInModel } from "../models/clockInModel";
 import { PenaltyModel } from "../models/penaltiesModel";
-import { Request, response, Response } from "express";
+import { Request, Response } from "express";
 import Status from '../configurations/status';
 import responseMessage from "../utils/responseError";
 import { EmployeeModel } from "../models/employeeModel";
@@ -30,10 +30,14 @@ export default class ClockInController {
         res: Response
     ) {
         try {
-            let employeeID = await EmployeeModel.find({
+            let employeeID = await EmployeeModel.findOne({
                 workID: req.params.wokid,
                 companyID: req.params.comid
-            });
+            }, '_id');
+            if (!employeeID) {
+                res.status(Status.OK).json([]);
+                return;
+            }
             
             let clockIns = await ClockInModel.find({
                 employeeID: employeeID
@@ -49,6 +53,54 @@ export default class ClockInController {
                 employeeID: req.params.empid
             });
     
+            res.status(Status.OK).json(clockIns);
+        } catch (error) { handleError(res, error as Error); }
+    }
+    
+    public static async getClockInsByEmployeeWorkIDInDateRange(
+        req: Request<
+            {comid: string, wokid: string}, 
+            {}, 
+            { startDate: Date, endDate: Date }
+            >, 
+        res: Response
+    ) {
+        try {
+            let employeeID = await EmployeeModel.findOne({
+                workID: req.params.wokid,
+                companyID: req.params.comid
+            }, '_id');
+            if (!employeeID) {
+                res.status(Status.OK).json([]);
+            }
+
+            let clockIns = await ClockInModel.find({
+                employeeID: employeeID,
+                clockedIn: {
+                    $gte: new Date(new Date(req.body.startDate).setHours(0,0,0,0)),
+                    $lte: new Date(new Date(req.body.endDate).setHours(23,59,59))
+                }
+            });
+            res.status(Status.OK).json(clockIns);
+        } catch (error) { handleError(res, error as Error); }
+    }
+
+    public static async getClockInsByEmployeeIDInDateRange(
+        req: Request<
+            {empid: string}, 
+            {}, 
+            { startDate: Date, endDate: Date }
+            >, 
+        res: Response
+    ) {
+        try {
+            let clockIns = await ClockInModel.find({
+                employeeID: req.params.empid,
+                clockedIn: {
+                    $gte: new Date(new Date(req.body.startDate).setHours(0,0,0,0)),
+                    $lte: new Date(new Date(req.body.endDate).setHours(23,59,59))
+                }
+            });
             res.status(Status.OK).json(clockIns);
         } catch (error) { handleError(res, error as Error); }
     }
