@@ -35,13 +35,59 @@ export default class PenaltyController {
                 workID: req.params.wokid,
                 companyID: req.params.comid
             });
-    
-            let penalties: any = {};
-            if (employee) {
-                penalties = await PenaltyModel.find({
-                    employeeID: employee._id
-                });
+            if (!employee) {
+                res.status(Status.OK).json([]);
+                return;
             }
+    
+            let penalties = await PenaltyModel.find({
+                employeeID: employee._id
+            });
+            res.status(Status.OK).json(penalties);
+        } catch (error) { handleError(res, error as Error); }
+    }
+
+    public static async getPenaltiesByEmployeeWorkIDInDateRange(
+        req: Request<
+            {comid: string, wokid: string}, 
+            {}, 
+            { startDate: Date, endDate: Date }
+            >, 
+        res: Response
+    ) {
+        try {
+            let employeeID = await EmployeeModel.findOne({
+                workID: req.params.wokid,
+                companyID: req.params.comid
+            }, '_id');
+            if (!employeeID) {
+                res.status(Status.OK).json([]);
+                return;
+            }
+
+            let penalties = await PenaltyModel.find({
+                employeeID: employeeID,
+                occurredAt: {
+                    $gte: new Date(new Date(req.body.startDate).setHours(0,0,0,0)),
+                    $lte: new Date(new Date(req.body.endDate).setHours(23,59,59))
+                }
+            });
+            res.status(Status.OK).json(penalties);
+        } catch (error) { handleError(res, error as Error); }
+    }
+
+    public static async getPenaltiesByEmployeeIDInDateRange(
+        req: Request<{empid: string}, {}, { startDate: Date, endDate: Date }>, 
+        res: Response
+    ) {
+        try {
+            let penalties = await PenaltyModel.find({
+                employeeID: req.params.empid,
+                occurredAt: {
+                    $gte: new Date(new Date(req.body.startDate).setHours(0,0,0,0)),
+                    $lte: new Date(new Date(req.body.endDate).setHours(23,59,59))
+                }
+            });
             res.status(Status.OK).json(penalties);
         } catch (error) { handleError(res, error as Error); }
     }
