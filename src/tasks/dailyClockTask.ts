@@ -6,7 +6,7 @@ import { PenaltyModel } from "../models/penaltiesModel";
 import { HolidayModel } from "../models/holidayModel";
 
 // change timestamp back to 00:00:00 in production, now running once per 10 seconds for testing purposes
-let task = cron.schedule('*/10 * * * * *' /* '0 0 0 * * *' */, async () => {
+let task = cron.schedule('0 0 0 * * *', async () => {
     // This can use some logging
 
     // 1 - clock out all employees who haven't
