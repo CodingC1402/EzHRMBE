@@ -6,101 +6,62 @@ import responseMessage from "../utils/responseError";
 import { EmployeeModel } from "../models/employeeModel";
 import { handleError } from "../utils/responseError";
 import { UserModel } from "../models/userModel";
+import { addDateRangeFilter } from "../utils/queryHelpers"
 
 export default class ClockInController {
 
-    public static async getAllClockInsByCompanyID(req: Request<{comid: string}>, res: Response) {
+    public static async getAllClockInsByCompanyID(req: Request<{compid: string}>, res: Response) {
         try {
             let employeeIDs = await EmployeeModel.find({
-                companyID: req.params.comid
+                companyID: req.params.compid
             }, '_id');
-    
-            let clockIns = await ClockInModel.find({
+
+            let query = ClockInModel.find({
                 employeeID: {
                     $in: employeeIDs
                 }
             });
+            let result = addDateRangeFilter(req, res, query, "clockedIn");
+            if (result) query = result;
+            else return;
     
+            let clockIns = await query;
             res.status(Status.OK).json(clockIns);
         } catch (error) { handleError(res, error as Error); }
     }
 
     public static async getAllClockInsByEmployeeWorkID(
-        req: Request<{comid: string, wokid: string}>, 
+        req: Request<{compid: string, workid: string}>, 
         res: Response
     ) {
         try {
             let employeeID = await EmployeeModel.findOne({
-                workID: req.params.wokid,
-                companyID: req.params.comid
+                workID: req.params.workid,
+                companyID: req.params.compid
             }, '_id');
-            if (!employeeID) {
-                res.status(Status.OK).json([]);
-                return;
-            }
-            
-            let clockIns = await ClockInModel.find({
+
+            let query = ClockInModel.find({
                 employeeID: employeeID
             });
+            let result = addDateRangeFilter(req, res, query, "clockedIn");
+            if (result) query = result;
+            else return;
     
+            let clockIns = await query;
             res.status(Status.OK).json(clockIns);
         } catch (error) { handleError(res, error as Error); }
     }
 
-    public static async getAllClockInsByEmployeeID(req: Request<{empid: string}>, res: Response) {
+    public static async getAllClockInsByEmployeeID(req: Request<{id: string}>, res: Response) {
         try {
-            let clockIns = await ClockInModel.find({
-                employeeID: req.params.empid
+            let query = ClockInModel.find({
+                employeeID: req.params.id
             });
-    
-            res.status(Status.OK).json(clockIns);
-        } catch (error) { handleError(res, error as Error); }
-    }
-    
-    public static async getClockInsByEmployeeWorkIDInDateRange(
-        req: Request<
-            {comid: string, wokid: string}, 
-            {}, 
-            { startDate: Date, endDate: Date }
-            >, 
-        res: Response
-    ) {
-        try {
-            let employeeID = await EmployeeModel.findOne({
-                workID: req.params.wokid,
-                companyID: req.params.comid
-            }, '_id');
-            if (!employeeID) {
-                res.status(Status.OK).json([]);
-            }
+            let result = addDateRangeFilter(req, res, query, "clockedIn");
+            if (result) query = result;
+            else return;
 
-            let clockIns = await ClockInModel.find({
-                employeeID: employeeID,
-                clockedIn: {
-                    $gte: new Date(new Date(req.body.startDate).setHours(0,0,0,0)),
-                    $lte: new Date(new Date(req.body.endDate).setHours(23,59,59))
-                }
-            });
-            res.status(Status.OK).json(clockIns);
-        } catch (error) { handleError(res, error as Error); }
-    }
-
-    public static async getClockInsByEmployeeIDInDateRange(
-        req: Request<
-            {empid: string}, 
-            {}, 
-            { startDate: Date, endDate: Date }
-            >, 
-        res: Response
-    ) {
-        try {
-            let clockIns = await ClockInModel.find({
-                employeeID: req.params.empid,
-                clockedIn: {
-                    $gte: new Date(new Date(req.body.startDate).setHours(0,0,0,0)),
-                    $lte: new Date(new Date(req.body.endDate).setHours(23,59,59))
-                }
-            });
+            let clockIns = await query;
             res.status(Status.OK).json(clockIns);
         } catch (error) { handleError(res, error as Error); }
     }

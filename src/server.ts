@@ -44,7 +44,7 @@ server.use(
 // server.use(authenticateRouter);
 server.use(getPathFromVersion("/employees", ApiVersion.v1), employeesRouter);
 server.use(getPathFromVersion("/leaves", ApiVersion.v1), leavesRouter);
-server.use(getPathFromVersion("/clockins", ApiVersion.v1), clockInsRouter);
+server.use(getPathFromVersion("/clock-ins", ApiVersion.v1), clockInsRouter);
 server.use(getPathFromVersion("/penalties", ApiVersion.v1), penaltyRouter);
 server.use(getPathFromVersion("/holidays", ApiVersion.v1), holidaysRouter);
 server.get("/", (req, res) => {
