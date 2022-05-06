@@ -4,11 +4,18 @@ import Status from '../configurations/status';
 import { handleError } from "../utils/responseError";
 import { Request, Response } from "express";
 import { addDateRangeFilter, addDateRangeFilterAggregate } from "../utils/queryHelpers";
+import mongoose from "mongoose";
 
 export default class PenaltyController {
     public static async getAccumulatedDeductionByEmployeeID(req: Request<{empid: string}>, res: Response) {
         try {
-            let aggre = PenaltyModel.aggregate([{ $match: { employeeID: req.params.empid } }]);
+            let aggre = PenaltyModel.aggregate([
+                { $match: 
+                    { employeeID: new mongoose
+                                    .Types
+                                    .ObjectId(req.params.empid) }
+                }
+            ]);
             let result = addDateRangeFilterAggregate(req, res, aggre, "occurredAt");
             if (result) aggre = result;
             else return;

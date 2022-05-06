@@ -7,12 +7,19 @@ import { EmployeeModel } from "../models/employeeModel";
 import { handleError } from "../utils/responseError";
 import { UserModel } from "../models/userModel";
 import { addDateRangeFilter, addDateRangeFilterAggregate } from "../utils/queryHelpers"
+import mongoose from "mongoose";
 
 export default class ClockInController {
 
     public static async getAccumulatedWorkHoursByEmployeeID(req: Request<{empid: string}>, res: Response) {
         try {
-            let aggre = ClockInModel.aggregate([{ $match: { employeeID: req.params.empid } }]);
+            let aggre = ClockInModel.aggregate([
+                { $match: 
+                    { employeeID: new mongoose
+                                    .Types
+                                    .ObjectId(req.params.empid) } 
+                }
+            ]);
             let result = addDateRangeFilterAggregate(req, res, aggre, "clockedIn");
             if (result) aggre = result;
             else return;

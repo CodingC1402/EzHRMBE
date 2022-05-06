@@ -51,12 +51,8 @@ export function addDateRangeFilterAggregate(
         if (start.isValid && end.isValid) {
             return aggre.match({
                 [timeProp]: {
-                    $gte: start
-                            .set({ hour: 0, minute: 0, second: 0 })
-                            .toMillis(),
-                    $lte: end
-                            .set({ hour: 23, minute: 59, second: 59 })
-                            .toMillis(),
+                    $gte: start.set({ hour: 0, minute: 0, second: 0 }),
+                    $lte: end.set({ hour: 23, minute: 59, second: 59 })
                 }
             });
         }
