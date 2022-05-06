@@ -2,10 +2,33 @@ import { PenaltyModel, IPenalty } from "../models/penaltiesModel";
 import { EmployeeModel } from "../models/employeeModel";
 import Status from '../configurations/status';
 import { handleError } from "../utils/responseError";
-import { query, Request, Response } from "express";
-import { addDateRangeFilter } from "../utils/queryHelpers";
+import { Request, Response } from "express";
+import { addDateRangeFilter, addDateRangeFilterAggregate } from "../utils/queryHelpers";
+import mongoose from "mongoose";
 
 export default class PenaltyController {
+    public static async getAccumulatedDeductionByEmployeeID(req: Request<{empid: string}>, res: Response) {
+        try {
+            let aggre = PenaltyModel.aggregate([
+                { $match: 
+                    { employeeID: new mongoose
+                                    .Types
+                                    .ObjectId(req.params.empid) }
+                }
+            ]);
+            let result = addDateRangeFilterAggregate(req, res, aggre, "occurredAt");
+            if (result) aggre = result;
+            else return;
+
+            aggre.group({
+                _id: "$employeeID",
+                totalDeduction: { $sum: "$deduction" }
+            });
+            let totalDeduction = await aggre;
+            res.status(Status.OK).json(totalDeduction);
+        } catch (error) { handleError(res, error as Error); }
+    }
+
     public static async getAllPenaltiesByCompanyID(req: Request<{compid: string}>, res: Response) {
         try {
             let employeeIDs = await EmployeeModel.find({
@@ -25,10 +48,10 @@ export default class PenaltyController {
         } catch (error) { handleError(res, error as Error); }
     }
 
-    public static async getAllPenaltiesByEmployeeID(req: Request<{id: string}>, res: Response) {
+    public static async getAllPenaltiesByEmployeeID(req: Request<{empid: string}>, res: Response) {
         try {
             let query = PenaltyModel.find({
-                employeeID: req.params.id
+                employeeID: req.params.empid
             });
             let result = addDateRangeFilter(req, res, query, "occurredAt");
             if (result) query = result;

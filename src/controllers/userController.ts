@@ -37,6 +37,7 @@ export default class UserController {
       };
       res.status(Status.CREATED).json(info);
     } catch (err) {
+      console.log(err);
       //@ts-ignore
       let error: Error = error;
       responseMessage(res, error.message, Status.BAD_REQUEST);

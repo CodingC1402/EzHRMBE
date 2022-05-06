@@ -6,9 +6,33 @@ import responseMessage from "../utils/responseError";
 import { EmployeeModel } from "../models/employeeModel";
 import { handleError } from "../utils/responseError";
 import { UserModel } from "../models/userModel";
-import { addDateRangeFilter } from "../utils/queryHelpers"
+import { addDateRangeFilter, addDateRangeFilterAggregate } from "../utils/queryHelpers"
+import mongoose from "mongoose";
 
 export default class ClockInController {
+
+    public static async getAccumulatedWorkHoursByEmployeeID(req: Request<{empid: string}>, res: Response) {
+        try {
+            let aggre = ClockInModel.aggregate([
+                { $match: 
+                    { employeeID: new mongoose
+                                    .Types
+                                    .ObjectId(req.params.empid) } 
+                }
+            ]);
+            let result = addDateRangeFilterAggregate(req, res, aggre, "clockedIn");
+            if (result) aggre = result;
+            else return;
+
+            aggre.group({
+                _id: "$employeeID",
+                totalNormalWorkHours: { $sum: "$normalWorkHours" },
+                totalOtWorkHours: { $sum: "$otWorkHours" }
+            });
+            let totalHours = await aggre;
+            res.status(Status.OK).json(totalHours);
+        } catch (error) { handleError(res, error as Error); }
+    }
 
     public static async getAllClockInsByCompanyID(req: Request<{compid: string}>, res: Response) {
         try {
@@ -52,10 +76,10 @@ export default class ClockInController {
         } catch (error) { handleError(res, error as Error); }
     }
 
-    public static async getAllClockInsByEmployeeID(req: Request<{id: string}>, res: Response) {
+    public static async getAllClockInsByEmployeeID(req: Request<{empid: string}>, res: Response) {
         try {
             let query = ClockInModel.find({
-                employeeID: req.params.id
+                employeeID: req.params.empid
             });
             let result = addDateRangeFilter(req, res, query, "clockedIn");
             if (result) query = result;
@@ -223,9 +247,7 @@ export default class ClockInController {
                 employeeID: req.params.empid
             });
     
-            let deleteCount = 0;
             if (deletedClockIn) {
-                deleteCount = 1;
                 if (deletedClockIn.late) {
                     await PenaltyModel.deleteOne({
                         type: 'Late',
@@ -235,7 +257,7 @@ export default class ClockInController {
                 }
             }
     
-            res.status(Status.OK).json({ deleteCount });
+            res.status(Status.OK).json(deletedClockIn);
         } catch (error) { handleError(res, error as Error); }
     }
 }
