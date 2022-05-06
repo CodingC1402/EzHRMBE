@@ -11,8 +11,6 @@ export function addDateRangeFilter(
     timeProp: string
   ): mongoose.Query<any, any> | undefined 
 {
-    let timezone = "Asia/Ho_Chi_Minh";
-
     if (req.query.startDate && req.query.endDate) {
         let start = DateTime.fromISO(req.query.startDate as string);
         let end = DateTime.fromISO(req.query.endDate as string);
@@ -22,12 +20,10 @@ export function addDateRangeFilter(
                     .gte(
                         start
                         .set({ hour: 0, minute: 0, second: 0 })
-                        .setZone(timezone)
                         .toMillis())
                     .lte(
                         end
                         .set({ hour: 23, minute: 59, second: 59 })
-                        .setZone(timezone)
                         .toMillis()
                     );
         }
