@@ -10,7 +10,7 @@ import { DateTime, Duration } from "luxon";
 
 // change timestamp back to 00:00:00 in production, now running once per 10 seconds for testing purposes
 let timeToRun = '0 0 0 * * *';
-timeToRun = '*/10 * * * * *'
+// timeToRun = '*/10 * * * * *'
 let task = cron.schedule(timeToRun, async () => {
     // This can use some logging
 

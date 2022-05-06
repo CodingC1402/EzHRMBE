@@ -3,12 +3,12 @@ import ClockInController from "../controllers/clockInController";
 
 let router = express.Router();
 
-const GET_BY_OBJID_PATH: string = "/id/:id";
+const GET_BY_OBJID_PATH: string = "/id/:empid";
 const GET_BY_WORKID_PATH: string = "/comp/:compid/:workid";
 const GET_BY_COMPID_PATH: string = "/comp/:compid";
 
-const UPDATE_BY_ID_PATH: string = "/id/:id";
-const DELETE_PATH: string = "/id/:id";
+const UPDATE_BY_ID_PATH: string = "/id/:empid";
+const DELETE_PATH: string = "/id/:empid";
 
 router.post('/', ClockInController.createClockIn);
 router.put(UPDATE_BY_ID_PATH, ClockInController.updateClockIn);
