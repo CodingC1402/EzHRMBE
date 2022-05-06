@@ -2,7 +2,7 @@ import { PenaltyModel, IPenalty } from "../models/penaltiesModel";
 import { EmployeeModel } from "../models/employeeModel";
 import Status from '../configurations/status';
 import { handleError } from "../utils/responseError";
-import { query, Request, Response } from "express";
+import { Request, Response } from "express";
 import { addDateRangeFilter } from "../utils/queryHelpers";
 
 export default class PenaltyController {

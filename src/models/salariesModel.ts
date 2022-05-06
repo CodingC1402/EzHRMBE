@@ -9,11 +9,11 @@ export interface ISalary {
     employeeID: Types.ObjectId
 }
 
-export const SalarySchema = new mongoose.Schema({
+export const SalarySchema = new mongoose.Schema<ISalary>({
     payday: { type: Date, required: true },
     otSalary: { type: Number, required: true},
     salary: { type: Number, required: true},
-    employeeID: { type: Types.ObjectId, required: true}
+    employeeID: { type: mongoose.SchemaTypes.ObjectId, required: true}
 });
 
 export const SalaryModel = mongoose.model(MODEL_NAME, SalarySchema);

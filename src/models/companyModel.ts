@@ -1,7 +1,7 @@
-import mongoose from "mongoose";
+import mongoose, { Types, Model } from "mongoose";
 import {Time} from "../utils/date";
-import { IRole } from "./rolesModel";
-import { IRules, RulesSchema } from "./rulesModel";
+import { IRole, RoleSchema } from "./rolesModel";
+import { IRules, RulesSchema, BasePenaltyTypes } from "./rulesModel";
 
 export interface ICompany {
   _id?: mongoose.Types.ObjectId;
@@ -22,7 +22,7 @@ export const DefaultCompany: ICompany = {
     endWork: Time.createTimeWithUTC0(7, 30, 0, ),
     allowedLateTime: Time.createTimeWithUTC0(0, 30, 0),
     maxLateTime: Time.createTimeWithUTC0(0, 30, 0),
-    penaltyType: ['Late', 'Absent']
+    penaltyType: Object.keys(BasePenaltyTypes)
   },
   holidays: [],
   roles: [{
@@ -30,16 +30,21 @@ export const DefaultCompany: ICompany = {
     idPrefix: "IT",
     idPostfix: "",
     baseSalary: 10000,
-    paymentPeriod: "Wtf?",
+    paymentPeriod: "Monthly",
     otMultiplier: 1.5
   }]
 };
 
-export const CompanySchema = new mongoose.Schema<ICompany>({
+type CompanyDocProps = {
+  roles: Types.DocumentArray<IRole>
+}
+type CompanyModelType = Model<ICompany, {}, CompanyDocProps>;
+
+export const CompanySchema = new mongoose.Schema<ICompany, CompanyModelType>({
   name: { type: String, required: true},
   address: { type: String, required: true},
   phone: { type: String, required: true},
   rule: { type: RulesSchema, required: true },
   holidays: { type: [Date] },
-  roles: {  }
+  roles: { type: [RoleSchema], required: true }
 });

@@ -22,6 +22,7 @@ export interface IEmployee {
 	resignDate?: Date;
   roleID: mongoose.Types.ObjectId;
 	companyID: mongoose.Types.ObjectId;
+  paymentDue: boolean;
 }
 
 export interface IEmployeeFullDetail extends IEmployee {
@@ -43,6 +44,7 @@ export const EmployeeSchema = new mongoose.Schema<IEmployee>({
   resignDate: { type: Date, required: false },
   roleID: { type: mongoose.Schema.Types.ObjectId }, // Add back required later.
   companyID: { type: mongoose.Schema.Types.ObjectId, required: true, immutable: true },
+  paymentDue: { type: Boolean, required: false }
 })
 
 

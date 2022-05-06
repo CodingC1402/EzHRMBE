@@ -5,11 +5,6 @@ import { EmployeeModel } from './employeeModel';
 
 const MODEL_NAME = 'penalties';
 
-export enum BasePenaltyType {
-    Late,
-    Absent
-}
-
 export interface IPenalty {
     type: string,
     occurredAt: Date,
