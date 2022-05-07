@@ -1,5 +1,9 @@
 import mongoose from "mongoose";
-import { BasePenaltyType } from "./penaltiesModel";
+
+export enum BasePenaltyTypes {
+  Late = "Late",
+  Absent = "Absent"
+}
 
 // We don't have time here
 export interface IRules {
@@ -7,7 +11,7 @@ export interface IRules {
   endWork: Date;
   allowedLateTime: Date;
   maxLateTime: Date;
-  penaltyType: (string | BasePenaltyType)[];
+  penaltyType: string[];
 }
 
 export const RulesSchema = new mongoose.Schema<IRules>({
