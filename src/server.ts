@@ -16,6 +16,7 @@ import clockInsRouter from "./routes/clockInRouter";
 import penaltyRouter from "./routes/penaltyRouter";
 import holidaysRouter from "./routes/holidaysRouter";
 import salaryRouter from "./routes/salaryRouter";
+import reportRouter from "./routes/reportRouter";
 
 require("dotenv/config");
 
@@ -49,6 +50,7 @@ server.use(getPathFromVersion("/clock-ins", ApiVersion.v1), clockInsRouter);
 server.use(getPathFromVersion("/penalties", ApiVersion.v1), penaltyRouter);
 server.use(getPathFromVersion("/holidays", ApiVersion.v1), holidaysRouter);
 server.use(getPathFromVersion("/salaries", ApiVersion.v1), salaryRouter);
+server.use(getPathFromVersion("/reports", ApiVersion.v1), reportRouter);
 server.get("/", (req, res) => {
   res.send("Hello world");
 });

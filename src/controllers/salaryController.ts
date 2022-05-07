@@ -14,9 +14,7 @@ export default class SalaryController {
             let query = SalaryModel.find({
                 employeeID: req.params.empid
             });
-            let result = addDateRangeFilter(req, res, query, "payday");
-            if (result) query = result;
-            else return;
+            query = addDateRangeFilter(req, query, "payday");
             
             let salaries = await query;
             res.status(Status.OK).json(salaries);
@@ -33,9 +31,7 @@ export default class SalaryController {
             let query = SalaryModel.find({
                 employeeID: { $in: employeeIDs }
             });
-            let result = addDateRangeFilter(req, res, query, "payday");
-            if (result) query = result;
-            else return;
+            query = addDateRangeFilter(req, query, "payday");
             
             let salaries = await query;
             res.status(Status.OK).json(salaries);

@@ -3,8 +3,8 @@ import { PenaltyModel } from "../models/penaltiesModel";
 import { Request, Response } from "express";
 import Status from '../configurations/status';
 import responseMessage from "../utils/responseError";
-import { EmployeeModel } from "../models/employeeModel";
 import { handleError } from "../utils/responseError";
+import { EmployeeModel } from "../models/employeeModel";
 import { UserModel } from "../models/userModel";
 import { addDateRangeFilter, addDateRangeFilterAggregate } from "../utils/queryHelpers"
 import mongoose from "mongoose";
@@ -20,7 +20,7 @@ export default class ClockInController {
                                     .ObjectId(req.params.empid) } 
                 }
             ]);
-            let result = addDateRangeFilterAggregate(req, res, aggre, "clockedIn");
+            let result = addDateRangeFilterAggregate(req.query.startDate, req.query.endDate, aggre, "clockedIn");
             if (result) aggre = result;
             else return;
 
@@ -45,9 +45,7 @@ export default class ClockInController {
                     $in: employeeIDs
                 }
             });
-            let result = addDateRangeFilter(req, res, query, "clockedIn");
-            if (result) query = result;
-            else return;
+            query = addDateRangeFilter(req, query, "clockedIn");
     
             let clockIns = await query;
             res.status(Status.OK).json(clockIns);
@@ -67,9 +65,7 @@ export default class ClockInController {
             let query = ClockInModel.find({
                 employeeID: employeeID
             });
-            let result = addDateRangeFilter(req, res, query, "clockedIn");
-            if (result) query = result;
-            else return;
+            query = addDateRangeFilter(req, query, "clockedIn");
     
             let clockIns = await query;
             res.status(Status.OK).json(clockIns);
@@ -81,9 +77,7 @@ export default class ClockInController {
             let query = ClockInModel.find({
                 employeeID: req.params.empid
             });
-            let result = addDateRangeFilter(req, res, query, "clockedIn");
-            if (result) query = result;
-            else return;
+            query = addDateRangeFilter(req, query, "clockedIn");
 
             let clockIns = await query;
             res.status(Status.OK).json(clockIns);
