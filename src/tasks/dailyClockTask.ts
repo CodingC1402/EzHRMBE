@@ -151,22 +151,23 @@ let task = cron.schedule(timeToRun, async () => {
                     } }
                 ],
                 as: "role"
-            } }
+            } },
+            { $unwind: "$role" }
         ]);
         let updateIDs: string[] = [];
 
         employees.forEach((e) => {
             let finalPayday: DateTime = DateTime.fromMillis((e.startDate as Date).getTime());
-            if (e.lastPay.length) finalPayday = e.lastPay.lastPayday[0];
+            if (e.lastPay.length) finalPayday = DateTime.fromJSDate(e.lastPay[0].lastPayday);
 
-            if (e.role[0].paymentPeriod === PaymentPeriod.Monthly) {
+            if (e.role.paymentPeriod === PaymentPeriod.Monthly) {
                 if (finalPayday
                         .plus({ months: 1 })
                         .diffNow('days')
                         .days <= 0)
                     updateIDs.push(e._id);
             }
-            else if (e.role[0].paymentPeriod === PaymentPeriod.Hourly) {
+            else if (e.role.paymentPeriod === PaymentPeriod.Hourly) {
                 if (finalPayday
                         .plus({ days: 15 })
                         .diffNow('days')

@@ -6,6 +6,7 @@ import { addDateRangeFilter } from "../utils/queryHelpers";
 import { EmployeeModel } from "../models/employeeModel";
 import { PaymentPeriod } from "../models/rolesModel";
 import { DateTime } from "luxon";
+import mongoose from "mongoose";
 
 export default class SalaryController {
     public static async getSalariesByEmployeeID(req: Request<{ empid: string }>, res: Response) {
@@ -44,7 +45,9 @@ export default class SalaryController {
     public static async createSalary(req: Request<{}, {}, ISalary>, res: Response) {
         try {
             let employeeAggr = await EmployeeModel.aggregate([
-                { $match: { _id: req.body.employeeID } },
+                { $match: 
+                    { _id: new mongoose.Types.ObjectId(req.body.employeeID) }
+                },
                 { $lookup: {
                     from: "users",
                     let: { roleID: "$roleID" },
@@ -74,13 +77,13 @@ export default class SalaryController {
 
             let employee = employeeAggr[0];
             let endOfPayPeriod = DateTime.fromJSDate(employee.startDate);
-            let payday = DateTime.fromJSDate(req.body.payday);
+            let payday = DateTime.fromJSDate(new Date(req.body.payday));
             if (existingSalary) {
                 endOfPayPeriod = DateTime
                     .fromJSDate(existingSalary.payday);
                 if (employee.role.paymentPeriod === PaymentPeriod.Monthly) {
                     endOfPayPeriod = endOfPayPeriod
-                        .plus({ months: 1 });
+                    .plus({ months: 1 });
                 }
             }
             if (payday.diff(endOfPayPeriod, "days").days < 0) {
@@ -91,7 +94,19 @@ export default class SalaryController {
                 ...req.body
             });
             await salary.save();
-            res.status(Status.CREATED).json(salary);
+            
+            let result = await EmployeeModel.updateOne(
+                { _id: employee._id },
+                { $set: { paymentDue: false } }
+            );
+            res.status(Status.CREATED);
+            if (result.modifiedCount) {
+                res.json({
+                    createdSalary: salary,
+                    message: "Employee payment due removed."
+                });
+            }
+            else res.json(salary);
         } catch (error) { handleError(res, error as Error); }
     }
 
