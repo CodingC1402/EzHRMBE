@@ -16,9 +16,7 @@ export default class PenaltyController {
                                     .ObjectId(req.params.empid) }
                 }
             ]);
-            let result = addDateRangeFilterAggregate(req, res, aggre, "occurredAt");
-            if (result) aggre = result;
-            else return;
+            aggre = addDateRangeFilterAggregate(req.query.startDate, req.query.endDate, aggre, "occurredAt");
 
             aggre.group({
                 _id: "$employeeID",
@@ -39,9 +37,7 @@ export default class PenaltyController {
                 employeeID: {
                     $in: employeeIDs
             }});
-            let result = addDateRangeFilter(req, res, query, "occurredAt");
-            if (result) query = result;
-            else return;
+            query = addDateRangeFilter(req, query, "occurredAt");
 
             let penalties = await query;
             res.status(Status.OK).json(penalties);
@@ -53,9 +49,7 @@ export default class PenaltyController {
             let query = PenaltyModel.find({
                 employeeID: req.params.empid
             });
-            let result = addDateRangeFilter(req, res, query, "occurredAt");
-            if (result) query = result;
-            else return;
+            query = addDateRangeFilter(req, query, "occurredAt");
 
             let penalties = await query;
             res.status(Status.OK).json(penalties);
@@ -72,9 +66,7 @@ export default class PenaltyController {
             let query = PenaltyModel.find({
                 employeeID: employeeID
             });
-            let result = addDateRangeFilter(req, res, query, "occurredAt");
-            if (result) query = result;
-            else return;
+            query = addDateRangeFilter(req, query, "occurredAt");
 
             let penalties = await query;
             res.status(Status.OK).json(penalties);

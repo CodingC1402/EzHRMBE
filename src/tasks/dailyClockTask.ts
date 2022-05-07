@@ -22,100 +22,7 @@ let task = cron.schedule(timeToRun, async () => {
         );
     } catch (error) { logError('ClockInModel.updateMany()'); }
 
-    // 2 - check if today is a holiday
-    let yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        yesterday.setHours(0,0,0,0);
-    try {
-        let holidays = await HolidayModel.find({
-            $or: [
-                { $and: [
-                    { startDate: { $lte: yesterday } },
-                    { $expr: {
-                        $gt: [
-                            { $dateAdd: { 
-                                startDate: '$startDate', 
-                                unit: 'day', 
-                                amount: '$numberOfDaysOff' 
-                            } },
-                            yesterday
-                        ]
-                    } }
-                ]},
-                { $and: [
-                    { $expr: { 
-                        $eq: [
-                            '$startDate',
-                            { $dateFromParts : {
-                                year: { $year: '$startDate' }, 
-                                month: yesterday.getMonth() + 1, 
-                                day: yesterday.getDate(),
-                                timezone: '+0700'
-                            } }
-                        ]
-                    } },
-                    { repeatYearly: true }
-                ] }
-            ]
-        });
-        if (holidays.length) {
-            console.log(`${yesterday.toLocaleDateString()} is part of a holiday, no absent check will be performed. Holidays details:`);
-            console.log(holidays);
-            compileClockInReport();
-            return;
-        }
-    } catch (error) { logError('HolidayModel.find()', 'Holiday check', error); }
-
-    // 3 - add penalties for all absent employees
-    try {
-        let attendantIDs = await ClockInModel.aggregate([
-            { $match: { 
-                clockedIn: { $gt: yesterday }
-             } },
-            { $group: { _id: '$employeeID' } },
-            { $project: { _id: true } }
-        ]);
-        let absentees = await EmployeeModel.find({
-            _id: { $nin: attendantIDs }
-        });
-        
-        yesterday.setHours(23, 59, 0); // so that penalty.occurredAt will be at 23:59:00 yesterday
-        console.log(`${yesterday.toLocaleDateString()} absent penalty list: [`);
-        for (let employee of absentees) {
-            let leaves = await LeavesModel.find({
-                $and: [
-                    {
-                        employeeID: employee.id,
-                        leaveType: { $ne: LeaveType.Unpaid },
-                        startDate: { $lte: yesterday },
-                    },
-                    { $expr: {
-                        $gt: [
-                            { $dateAdd: { 
-                                startDate: '$startDate', 
-                                unit: 'day', 
-                                amount: '$numberOfDays' 
-                            } },
-                            yesterday
-                        ]
-                    } }
-                ]
-            });
-            if (leaves.length) continue;
-
-            let pen = new PenaltyModel({
-                type: 'Absent',
-                employeeID: employee.id,
-                occurredAt: yesterday
-            });
-            // ---UNCOMMENT IN PRODUCTION---
-            // await pen.save();
-            console.log(pen);
-        }
-        console.log(']');
-    } catch (error) { logError('various functions', 'processing absence penalty', error); }
-
-    // 4 - check for employee's payments due
+    // 2 - check for employee's payments due
     try {
         let employees = await EmployeeModel.aggregate([
             { $match: { resignDate: { $exists: false } } },
@@ -184,12 +91,105 @@ let task = cron.schedule(timeToRun, async () => {
         console.log(`${DateTime.now().toLocaleString()} is payday for ${updateIDs.length} employees, marked as payment due.`);
     } catch (error) { logError('various functions', 'checking payments due', error); }
 
+    // 3 - check if today is a holiday
+    let yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        yesterday.setHours(0,0,0,0);
+    try {
+        let holidays = await HolidayModel.find({
+            $or: [
+                { $and: [
+                    { startDate: { $lte: yesterday } },
+                    { $expr: {
+                        $gt: [
+                            { $dateAdd: { 
+                                startDate: '$startDate', 
+                                unit: 'day', 
+                                amount: '$numberOfDaysOff' 
+                            } },
+                            yesterday
+                        ]
+                    } }
+                ]},
+                { $and: [
+                    { $expr: { 
+                        $eq: [
+                            '$startDate',
+                            { $dateFromParts : {
+                                year: { $year: '$startDate' }, 
+                                month: yesterday.getMonth() + 1, 
+                                day: yesterday.getDate(),
+                                timezone: '+0700'
+                            } }
+                        ]
+                    } },
+                    { repeatYearly: true }
+                ] }
+            ]
+        });
+        if (holidays.length) {
+            console.log(`${yesterday.toLocaleDateString()} is part of a holiday, no absent check will be performed. Holidays details:`);
+            console.log(holidays);
+            compileClockInReport();
+            return;
+        }
+    } catch (error) { logError('HolidayModel.find()', 'Holiday check', error); }
+
+    // 4 - add penalties for all absent employees in case today isn't a holiday
+    try {
+        let attendantIDs = await ClockInModel.aggregate([
+            { $match: { 
+                clockedIn: { $gt: yesterday }
+             } },
+            { $group: { _id: '$employeeID' } },
+            { $project: { _id: true } }
+        ]);
+        let absentees = await EmployeeModel.find({
+            _id: { $nin: attendantIDs }
+        });
+        
+        yesterday.setHours(23, 59, 0); // so that penalty.occurredAt will be at 23:59:00 yesterday
+        console.log(`${yesterday.toLocaleDateString()} absent penalty list: [`);
+        for (let employee of absentees) {
+            let leaves = await LeavesModel.find({
+                $and: [
+                    {
+                        employeeID: employee.id,
+                        leaveType: { $ne: LeaveType.Unpaid },
+                        startDate: { $lte: yesterday },
+                    },
+                    { $expr: {
+                        $gt: [
+                            { $dateAdd: { 
+                                startDate: '$startDate', 
+                                unit: 'day', 
+                                amount: '$numberOfDays' 
+                            } },
+                            yesterday
+                        ]
+                    } }
+                ]
+            });
+            if (leaves.length) continue;
+
+            let pen = new PenaltyModel({
+                type: 'Absent',
+                employeeID: employee.id,
+                occurredAt: yesterday
+            });
+            // ---UNCOMMENT IN PRODUCTION---
+            // await pen.save();
+            console.log(pen);
+        }
+        console.log(']');
+    } catch (error) { logError('various functions', 'processing absence penalty', error); }
+
     // 5 - update monthly report on clock in/out
     compileClockInReport();
 });
 
 function compileClockInReport() {
-    // compile monthly clock in reports
+    // compile monthly reports
     //
 }
 

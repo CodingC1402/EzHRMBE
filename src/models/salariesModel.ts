@@ -1,4 +1,4 @@
-import mongoose, {Types} from 'mongoose';
+import mongoose from 'mongoose';
 
 const MODEL_NAME = 'salaries';
 
@@ -6,7 +6,7 @@ export interface ISalary {
     payday: Date,
     otSalary: number,
     salary: number,
-    employeeID: Types.ObjectId
+    employeeID: mongoose.Types.ObjectId
 }
 
 export const SalarySchema = new mongoose.Schema<ISalary>({
