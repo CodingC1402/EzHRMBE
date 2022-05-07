@@ -5,16 +5,17 @@ import Env from "./configurations/env";
 import session from "express-session";
 import MongoStore from "connect-mongo";
 import { Connection } from "./database/connection";
-import authenticateRouter from "./routes/authenticateRouter";
 import { SESSION_EXPIRE_SPAN } from "./configurations/security";
-import employeesRouter from "./routes/employeesRouter";
 import getPathFromVersion from "./utils/pathFromVersion";
 import { ApiVersion } from "./configurations/apiVersions";
+import dailyTask from "./tasks/dailyClockTask";
+import authenticateRouter from "./routes/authenticateRouter";
+import employeesRouter from "./routes/employeesRouter";
 import leavesRouter from "./routes/leavesRouter";
 import clockInsRouter from "./routes/clockInRouter";
 import penaltyRouter from "./routes/penaltyRouter";
-import dailyTask from "./tasks/dailyClockTask";
 import holidaysRouter from "./routes/holidaysRouter";
+import salaryRouter from "./routes/salaryRouter";
 
 require("dotenv/config");
 
@@ -47,6 +48,7 @@ server.use(getPathFromVersion("/leaves", ApiVersion.v1), leavesRouter);
 server.use(getPathFromVersion("/clock-ins", ApiVersion.v1), clockInsRouter);
 server.use(getPathFromVersion("/penalties", ApiVersion.v1), penaltyRouter);
 server.use(getPathFromVersion("/holidays", ApiVersion.v1), holidaysRouter);
+server.use(getPathFromVersion("/salaries", ApiVersion.v1), salaryRouter);
 server.get("/", (req, res) => {
   res.send("Hello world");
 });
