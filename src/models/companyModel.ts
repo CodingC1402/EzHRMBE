@@ -55,6 +55,6 @@ export const CompanySchema = new mongoose.Schema<ICompany, CompanyModelType>({
   address: { type: String, required: true },
   phone: { type: String, required: true },
   rule: { type: RulesSchema, required: true },
-  holidays: { type: [HolidaySchema] },
+  holidays: { type: [HolidaySchema], required: true },
   roles: { type: [RoleSchema], required: true },
 });
