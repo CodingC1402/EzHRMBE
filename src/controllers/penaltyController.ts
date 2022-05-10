@@ -75,10 +75,7 @@ export default class PenaltyController {
 
     public static async createPenalty(req: Request<{}, {}, IPenalty>, res: Response) {
         let penalty = new PenaltyModel({
-            type: req.body.type,
-            occurredAt: req.body.occurredAt,
-            employeeID: req.body.employeeID,
-            deduction: req.body.deduction
+            ...req.body
         });
 
         try {

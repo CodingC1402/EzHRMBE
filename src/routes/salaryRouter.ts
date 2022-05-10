@@ -5,6 +5,7 @@ const router = express.Router();
 
 const GET_BY_EMPID_PATH: string = "/id/:empid";
 const GET_BY_WORKID_PATH: string = "/comp/:compid/:workid";
+const GET_BY_COMPID_PATH: string = "/comp/:compid/";
 
 const CREATE_PATH: string = "/";
 const UPDATE_PATH: string = "/:id";
@@ -12,6 +13,7 @@ const DELETE_PATH: string = "/:id";
 
 router.get(GET_BY_EMPID_PATH, SalaryController.getSalariesByEmployeeID);
 router.get(GET_BY_WORKID_PATH, SalaryController.getSalariesByEmployeeWorkID);
+router.get(GET_BY_COMPID_PATH, SalaryController.getSalariesByCompanyID);
 
 router.post(CREATE_PATH, SalaryController.createSalary);
 router.put(UPDATE_PATH, SalaryController.updateSalary);

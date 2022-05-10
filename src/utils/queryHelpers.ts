@@ -13,7 +13,6 @@ export function addDateRangeFilter(
     if (req.query.startDate && req.query.endDate) {
         let start = DateTime.fromISO(req.query.startDate as string);
         let end = DateTime.fromISO(req.query.endDate as string);
-        console.log(end.set({ hour: 23, minute: 59, second: 59 }).toISO());
         if (start.isValid && end.isValid) {
             return q.where({
                 [timeProp]: {
