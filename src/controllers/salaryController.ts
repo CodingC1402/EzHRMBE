@@ -9,6 +9,22 @@ import { DateTime } from "luxon";
 import mongoose from "mongoose";
 
 export default class SalaryController {
+    public static async getSalariesByCompanyID(req: Request<{ compid: string }>, res: Response) {
+        try {
+            let employeeIDs = await EmployeeModel.findOne({
+                companyID: req.params.compid
+            }, "_id");
+
+            let query = SalaryModel.find({
+                employeeID: { $in: employeeIDs }
+            });
+            query = addDateRangeFilter(req, query, "payday");
+            
+            let salaries = await query;
+            res.status(Status.OK).json(salaries);
+        } catch (error) { handleError(res, error as Error); }
+    }
+
     public static async getSalariesByEmployeeID(req: Request<{ empid: string }>, res: Response) {
         try {
             let query = SalaryModel.find({

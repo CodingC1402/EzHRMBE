@@ -8,6 +8,7 @@ import { EmployeeModel } from "../models/employeeModel";
 import { UserModel } from "../models/userModel";
 import { addDateRangeFilter, addDateRangeFilterAggregate } from "../utils/queryHelpers"
 import mongoose from "mongoose";
+import { DateTime } from "luxon";
 
 export default class ClockInController {
 
@@ -94,7 +95,7 @@ export default class ClockInController {
 
             let existing = await ClockInModel.findOne({
                 clockedIn: {
-                    $gt: new Date(new Date().setHours(0,0,0,0))
+                    $gt: DateTime.now().set({ hour: 0, minute: 0, second: 0, millisecond: 0 })
                 },
                 employeeID: req.body.employeeID
             });
@@ -227,31 +228,25 @@ export default class ClockInController {
         } catch (error) { handleError(res, error as Error); return; }
     }
 
-    public static async deleteClockIn(req: Request<{empid: string}, {}, IClockIn>, res: Response) {
-        if (new Date(req.body.clockedIn).getTime() < new Date().setHours(0,0,0,0)) {
-            responseMessage(res, 'Cannot delete clock in of a past day', Status.FORBIDDEN);
-            return;
-        }
-
+    public static async deleteClockIn(req: Request<{id: string}>, res: Response) {
         try {
-            let deletedClockIn = await ClockInModel.findOneAndDelete({
-                clockedIn: {
-                    $gt: new Date(new Date().setHours(0,0,0,0))
-                },
-                employeeID: req.params.empid
+            let clockIn = await ClockInModel.findById(req.params.id);
+            if (!clockIn) {
+                throw new Error("Cannot find clock-in with specified Id.");
+            }
+            await ClockInModel.deleteOne({
+                _id: clockIn.id
             });
     
-            if (deletedClockIn) {
-                if (deletedClockIn.late) {
-                    await PenaltyModel.deleteOne({
-                        type: 'Late',
-                        occurredAt: deletedClockIn.clockedIn,
-                        employeeID: deletedClockIn.employeeID
-                    });
-                }
+            if (clockIn.late) {
+                await PenaltyModel.deleteOne({
+                    type: 'Late',
+                    occurredAt: clockIn.clockedIn,
+                    employeeID: clockIn.employeeID
+                });
             }
     
-            res.status(Status.OK).json(deletedClockIn);
+            res.status(Status.OK).json(clockIn);
         } catch (error) { handleError(res, error as Error); }
     }
 }
