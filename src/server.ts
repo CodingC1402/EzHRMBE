@@ -17,7 +17,7 @@ import penaltyRouter from "./routes/penaltyRouter";
 import holidaysRouter from "./routes/holidaysRouter";
 import salaryRouter from "./routes/salaryRouter";
 import reportRouter from "./routes/reportRouter";
-
+import rolesRouter from "./routes/rolesRouter";
 require("dotenv/config");
 
 const server = express();
@@ -51,6 +51,7 @@ server.use(getPathFromVersion("/penalties", ApiVersion.v1), penaltyRouter);
 server.use(getPathFromVersion("/holidays", ApiVersion.v1), holidaysRouter);
 server.use(getPathFromVersion("/salaries", ApiVersion.v1), salaryRouter);
 server.use(getPathFromVersion("/reports", ApiVersion.v1), reportRouter);
+server.use(getPathFromVersion("/roles", ApiVersion.v1), rolesRouter);
 server.get("/", (req, res) => {
   res.send("Hello world");
 });
