@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 export enum PaymentPeriod {
   Hourly = "Hourly",
-  Monthly = "Monthly"
+  Monthly = "Monthly",
 }
 
 export interface IRole {
@@ -16,9 +16,14 @@ export interface IRole {
 
 export const RoleSchema = new mongoose.Schema<IRole>({
   name: { type: String, required: true },
-  idPrefix: {type: String, required: true },
-  idPostfix: {type: String, required: false}, // Add postfix to employee workID
+  idPrefix: { type: String, required: false },
+  idPostfix: { type: String, required: false }, // Add postfix to employee workID
   baseSalary: { type: Number, required: true },
-  paymentPeriod: { type: String, required: true, enum: Object.keys(PaymentPeriod)},
-  otMultiplier: {type: Number, required: true }
+  paymentPeriod: {
+    type: String,
+    required: true,
+    enum: Object.keys(PaymentPeriod),
+  },
+  otMultiplier: { type: Number, required: true },
 });
+export const RoleModel = mongoose.model("roles", RoleSchema);
