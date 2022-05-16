@@ -44,10 +44,7 @@ export default class HolidaysController {
   );
 
   public static readonly deleteHoliday = controller.createFunction(
-    async function (
-      req: Request<{ name: string }, {}, IHoliday>,
-      res: Response
-    ) {
+    async function (req: Request<{ id: string }, {}, IHoliday>, res: Response) {
       const user = await UserModel.findOne({ username: req.session.username })
         .select("-password")
         .lean();
@@ -58,14 +55,14 @@ export default class HolidaysController {
       }
       //Check name holiday
       const result = user.company.holidays.filter(
-        (date: IHoliday) => date.name === req.params.name
+        (date: any) => date._id.toString() === req.params.id
       );
       if (result.length == 0) {
         responseMessage(res, HOLIDAY_NOT_FOUND, Status.NOT_FOUND);
         return;
       }
       user.company.holidays = user.company.holidays.filter(
-        (date) => date.name !== req.params.name
+        (date: any) => date._id.toString() !== req.params.id
       );
 
       await UserModel.findOneAndUpdate({ username: req.session.username }, user)
@@ -79,10 +76,7 @@ export default class HolidaysController {
   );
 
   public static readonly updateHoliday = controller.createFunction(
-    async function (
-      req: Request<{ name: string }, {}, IHoliday>,
-      res: Response
-    ) {
+    async function (req: Request<{ id: string }, {}, IHoliday>, res: Response) {
       const user = await UserModel.findOne({ username: req.session.username })
         .select("-password")
         .lean();
@@ -93,29 +87,27 @@ export default class HolidaysController {
       }
       //Check name holiday
       const result = user.company.holidays.filter(
-        (date: IHoliday) => date.name === req.params.name
+        (date: any) => date._id.toString() === req.params.id
       );
       if (result.length == 0) {
         responseMessage(res, HOLIDAY_NOT_FOUND, Status.NOT_FOUND);
         return;
       }
-      user.company.holidays = user.company.holidays.map(
-        (dateHoliday: IHoliday) => {
-          if (dateHoliday.name === req.params.name) {
-            dateHoliday.name = req.body.name ? req.body.name : dateHoliday.name;
-            dateHoliday.startDate = req.body.startDate
-              ? new Date(req.body.startDate)
-              : dateHoliday.startDate;
-            dateHoliday.numberOfDaysOff = req.body.numberOfDaysOff
-              ? req.body.numberOfDaysOff
-              : dateHoliday.numberOfDaysOff;
-            dateHoliday.repeatYearly = req.body.repeatYearly
-              ? req.body.repeatYearly
-              : dateHoliday.repeatYearly;
-          }
-          return dateHoliday;
+      user.company.holidays = user.company.holidays.map((dateHoliday: any) => {
+        if (dateHoliday._id.toString() === req.params.id) {
+          dateHoliday.name = req.body.name ? req.body.name : dateHoliday.name;
+          dateHoliday.startDate = req.body.startDate
+            ? new Date(req.body.startDate)
+            : dateHoliday.startDate;
+          dateHoliday.numberOfDaysOff = req.body.numberOfDaysOff
+            ? req.body.numberOfDaysOff
+            : dateHoliday.numberOfDaysOff;
+          dateHoliday.repeatYearly = req.body.repeatYearly
+            ? req.body.repeatYearly
+            : dateHoliday.repeatYearly;
         }
-      );
+        return dateHoliday;
+      });
       await UserModel.findOneAndUpdate({ username: req.session.username }, user)
         .then(() => {
           res.status(Status.OK).json("UPDATE_HOLIDAY_SUCCESS");
@@ -125,11 +117,8 @@ export default class HolidaysController {
         });
     }
   );
-  public static readonly getHolidayByName = controller.createFunction(
-    async function (
-      req: Request<{ name: string }, {}, IHoliday>,
-      res: Response
-    ) {
+  public static readonly getHolidayById = controller.createFunction(
+    async function (req: Request<{ id: string }, {}, IHoliday>, res: Response) {
       const user = await UserModel.findOne({ username: req.session.username })
         .select("-password")
         .lean();
@@ -139,7 +128,7 @@ export default class HolidaysController {
         return;
       }
       const result = user.company.holidays.filter(
-        (date: IHoliday) => date.name === req.params.name
+        (date: any) => date._id.toString() === req.params.id
       );
       if (result.length == 0) {
         responseMessage(res, HOLIDAY_NOT_FOUND, Status.NOT_FOUND);
