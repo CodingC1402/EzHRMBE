@@ -18,6 +18,7 @@ import holidaysRouter from "./routes/holidaysRouter";
 import salaryRouter from "./routes/salaryRouter";
 import reportRouter from "./routes/reportRouter";
 import rolesRouter from "./routes/rolesRouter";
+import companyRouter from "./routes/companyRouter";
 require("dotenv/config");
 
 const server = express();
@@ -44,6 +45,7 @@ server.use(
 
 //Routers
 server.use(authenticateRouter);
+server.use(getPathFromVersion("/company", ApiVersion.v1), companyRouter);       // to be removed
 server.use(getPathFromVersion("/employees", ApiVersion.v1), employeesRouter);
 server.use(getPathFromVersion("/leaves", ApiVersion.v1), leavesRouter);
 server.use(getPathFromVersion("/clock-ins", ApiVersion.v1), clockInsRouter);

@@ -38,7 +38,7 @@ async function validatePenType(penalty: IPenalty) {
 
     let user = await UserModel.findOne({ 'company.companyid': employee.companyID });
     if (!user) throw Error('User not found...?');
-    if (!user.company.rule.penaltyType.includes(penalty.type)) throw Error('Penalty type doesn\'t exist in company\'s penalty types');
+    if (!user.company.rule.penaltyTypes.includes(penalty.type)) throw Error('Penalty type doesn\'t exist in company\'s penalty types');
 }
 
 export const PenaltyModel = mongoose.model(MODEL_NAME, PenaltySchema);
