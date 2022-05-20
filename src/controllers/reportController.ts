@@ -11,10 +11,10 @@ import { DateTime } from "luxon";
 import mongoose from "mongoose";
 
 export default class ReportController {
-    public static async getAllReportsByCompanyID(req: Request<{ compid: string }>, res: Response) {
+    public static async getAllReportsByCompanyID(req: Request, res: Response) {
         try {
             let query = ReportModel.find({
-                companyID: req.params.compid
+                companyID: req.session.companyID
             });
             if (req.query.startDate && req.query.endDate && !req.query.month) {
                 query = addDateRangeFilter(req, query, "compileDate");
@@ -34,11 +34,17 @@ export default class ReportController {
     }
     
     public static async createReport(
-        req: Request<{ compid: string }, {}, { startDate: string, endDate: string }>,
+        req: Request<{}, {}, { startDate: string, endDate: string }>,
         res: Response
     ) {
         try {
-            let rep = await compileReport(req.params.compid, req.body.startDate, req.body.endDate);
+            if (!req.session.companyID) {
+                res
+                    .status(Status.UNAUTHORIZED)
+                    .json({ message: "Authentication failed." });
+                return;
+            }
+            let rep = await compileReport(req.session.companyID, req.body.startDate, req.body.endDate);
 
             let report = new ReportModel({ ...rep });
             await report.save();

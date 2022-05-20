@@ -1,9 +1,9 @@
 import express from "express";
 import ReportController from "../controllers/reportController";
 
-const GET_BY_COMPID_PATH: string = "/comp/:compid";
+const GET_BY_COMPID_PATH: string = "/";
 
-const CREATE_PATH: string = "/:compid";
+const CREATE_PATH: string = "/";
 const UPDATE_PATH: string = "/:id";
 const DELETE_PATH: string = "/:id";
 

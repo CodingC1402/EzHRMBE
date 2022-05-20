@@ -35,10 +35,10 @@ export default class ClockInController {
         } catch (error) { handleError(res, error as Error); }
     }
 
-    public static async getAllClockInsByCompanyID(req: Request<{compid: string}>, res: Response) {
+    public static async getAllClockInsByCompanyID(req: Request, res: Response) {
         try {
             let employeeIDs = await EmployeeModel.find({
-                companyID: req.params.compid
+                companyID: req.session.companyID
             }, '_id');
 
             let query = ClockInModel.find({
@@ -54,13 +54,13 @@ export default class ClockInController {
     }
 
     public static async getAllClockInsByEmployeeWorkID(
-        req: Request<{compid: string, workid: string}>, 
+        req: Request<{ workid: string }>, 
         res: Response
     ) {
         try {
             let employeeID = await EmployeeModel.findOne({
                 workID: req.params.workid,
-                companyID: req.params.compid
+                companyID: req.session.companyID
             }, '_id');
 
             let query = ClockInModel.find({

@@ -3,9 +3,9 @@ import PenaltyController from "../controllers/penaltyController";
 
 const router = express.Router();
 
-const GET_BY_EMPID_PATH: string = "/id/:empid";
-const GET_BY_WORKID_PATH: string = "/comp/:compid/:workid";
-const GET_BY_COMPID_PATH: string = "/comp/:compid";
+const GET_BY_COMPID_PATH: string = "/";
+const GET_BY_EMPID_PATH: string = "/:empid";
+const GET_BY_WORKID_PATH: string = "/workid/:workid";
 const GET_ACCM_DEDUCTION_BY_EMPID_PATH: string = "/accm-deduction/:empid";
 
 const CREATE_PATH: string = "/";

@@ -27,10 +27,10 @@ export default class PenaltyController {
         } catch (error) { handleError(res, error as Error); }
     }
 
-    public static async getAllPenaltiesByCompanyID(req: Request<{compid: string}>, res: Response) {
+    public static async getAllPenaltiesByCompanyID(req: Request, res: Response) {
         try {
             let employeeIDs = await EmployeeModel.find({
-                companyID: req.params.compid
+                companyID: req.session.companyID
             }, '_id');
     
             let query = PenaltyModel.find({
@@ -56,11 +56,11 @@ export default class PenaltyController {
         } catch (error) { handleError(res, error as Error); }
     }
 
-    public static async getAllPenaltiesByEmployeeWorkID(req: Request<{compid: string, workid: string}>, res: Response) {
+    public static async getAllPenaltiesByEmployeeWorkID(req: Request<{ workid: string }>, res: Response) {
         try {
             let employeeID = await EmployeeModel.findOne({
                 workID: req.params.workid,
-                companyID: req.params.compid
+                companyID: req.session.companyID
             }, '_id');
     
             let query = PenaltyModel.find({

@@ -3,9 +3,9 @@ import SalaryController from "../controllers/salaryController";
 
 const router = express.Router();
 
-const GET_BY_EMPID_PATH: string = "/id/:empid";
-const GET_BY_WORKID_PATH: string = "/comp/:compid/:workid";
-const GET_BY_COMPID_PATH: string = "/comp/:compid/";
+const GET_BY_COMPID_PATH: string = "/";
+const GET_BY_EMPID_PATH: string = "/:empid";
+const GET_BY_WORKID_PATH: string = "/workid/:workid";
 
 const CREATE_PATH: string = "/";
 const UPDATE_PATH: string = "/:id";

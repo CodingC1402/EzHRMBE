@@ -11,7 +11,7 @@ export interface IRules {
   endWork: Date;
   allowedLateTime: Date;
   maxLateTime: Date;
-  penaltyType: string[];
+  penaltyTypes: string[];
 }
 
 export const RulesSchema = new mongoose.Schema<IRules>({
@@ -19,5 +19,5 @@ export const RulesSchema = new mongoose.Schema<IRules>({
   endWork: { type: Date, required: true },
   allowedLateTime: { type: Date, required: true},
   maxLateTime: { type: Date, required: true },
-  penaltyType: { type: [String], required: true }
+  penaltyTypes: { type: [String], required: true }
 })
