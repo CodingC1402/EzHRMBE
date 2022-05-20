@@ -57,11 +57,9 @@ export default class UserController {
     res.status(Status.OK).send(user);
   });
 
-  // Update company currently using company Id for testing purposes
-  
   public static async updateCompanyInfo(
     req: Request<
-      { id: string },
+      {},
       {},
       { name: string, address: string, phone: string }
     >,
@@ -69,7 +67,7 @@ export default class UserController {
   ) {
     try {
       let user = await UserModel.findOneAndUpdate(
-        { "company._id": req.params.id },
+        { "company._id": req.session.companyID },
         {
           "company.name": req.body.name,
           "company.address": req.body.address,
@@ -86,7 +84,7 @@ export default class UserController {
 
   public static async updateCompanyRule(
     req: Request<
-      { id: string },
+      {},
       {},
       IRules
     >,
@@ -94,7 +92,7 @@ export default class UserController {
   ) {
     try {
       let user = await UserModel.findOneAndUpdate(
-        { "company._id": req.params.id },
+        { "company._id": req.session.companyID },
         {
           "company.rule.startWork": req.body.startWork,
           "company.rule.endWork": req.body.endWork,
@@ -112,7 +110,7 @@ export default class UserController {
 
   public static async createPenaltyType(
     req: Request<
-      { id: string },
+      {},
       {},
       { penalty: string }
     >,
@@ -120,7 +118,7 @@ export default class UserController {
   ) {
     try {
       let user = await UserModel.findOne({
-        "company._id": req.params.id
+        "company._id": req.session.companyID
       });
       if (!user) {
         throw new Error("Cannot find user with specified company ID.");
@@ -136,12 +134,12 @@ export default class UserController {
   }
 
   public static async deletePenaltyType(
-    req: Request<{ id: string, penalty: string }>,
+    req: Request<{ penalty: string }>,
     res: Response
   ) {
     try {
       let user = await UserModel.findOne({
-        "company._id": req.params.id
+        "company._id": req.session.companyID
       });
       if (!user) {
         throw new Error("Cannot find user with specified company ID.");

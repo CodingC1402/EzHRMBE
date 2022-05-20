@@ -9,10 +9,10 @@ import { DateTime } from "luxon";
 import mongoose from "mongoose";
 
 export default class SalaryController {
-    public static async getSalariesByCompanyID(req: Request<{ compid: string }>, res: Response) {
+    public static async getSalariesByCompanyID(req: Request, res: Response) {
         try {
             let employeeIDs = await EmployeeModel.findOne({
-                companyID: req.params.compid
+                companyID: req.session.companyID
             }, "_id");
 
             let query = SalaryModel.find({
@@ -37,10 +37,10 @@ export default class SalaryController {
         } catch (error) { handleError(res, error as Error); }
     }
 
-    public static async getSalariesByEmployeeWorkID(req: Request<{ compid: string, workid: string }>, res: Response) {
+    public static async getSalariesByEmployeeWorkID(req: Request<{ workid: string }>, res: Response) {
         try {
             let employeeIDs = await EmployeeModel.findOne({
-                companyID: req.params.compid,
+                companyID: req.session.companyID,
                 workID: req.params.workid
             }, "_id");
 

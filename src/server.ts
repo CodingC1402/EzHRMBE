@@ -45,7 +45,7 @@ server.use(
 
 //Routers
 server.use(authenticateRouter);
-server.use(getPathFromVersion("/company", ApiVersion.v1), companyRouter);       // to be removed
+server.use(getPathFromVersion("/company", ApiVersion.v1), companyRouter);
 server.use(getPathFromVersion("/employees", ApiVersion.v1), employeesRouter);
 server.use(getPathFromVersion("/leaves", ApiVersion.v1), leavesRouter);
 server.use(getPathFromVersion("/clock-ins", ApiVersion.v1), clockInsRouter);
