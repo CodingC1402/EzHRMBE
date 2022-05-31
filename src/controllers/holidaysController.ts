@@ -102,7 +102,7 @@ export default class HolidaysController {
           dateHoliday.numberOfDaysOff = req.body.numberOfDaysOff
             ? req.body.numberOfDaysOff
             : dateHoliday.numberOfDaysOff;
-          dateHoliday.repeatYearly = req.body.repeatYearly
+          dateHoliday.repeatYearly = req.body.repeatYearly !== undefined
             ? req.body.repeatYearly
             : dateHoliday.repeatYearly;
         }
@@ -110,7 +110,7 @@ export default class HolidaysController {
       });
       await UserModel.findOneAndUpdate({ username: req.session.username }, user)
         .then(() => {
-          res.status(Status.OK).json("UPDATE_HOLIDAY_SUCCESS");
+          res.status(Status.OK).json(user.company.holidays);
         })
         .catch((err: Error) => {
           responseMessage(res, err.message, Status.BAD_REQUEST);
