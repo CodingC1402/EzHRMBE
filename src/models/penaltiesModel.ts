@@ -36,7 +36,7 @@ async function validatePenType(penalty: IPenalty) {
     let employee = await EmployeeModel.findById(penalty.employeeID);
     if (!employee) throw Error('Employee not found.');
 
-    let user = await UserModel.findOne({ 'company.companyid': employee.companyID });
+    let user = await UserModel.findOne({ 'company._id': employee.companyID });
     if (!user) throw Error('User not found...?');
     if (!user.company.rule.penaltyTypes.includes(penalty.type)) throw Error('Penalty type doesn\'t exist in company\'s penalty types');
 }
