@@ -23,6 +23,7 @@
   - GET     `/employees/all` : Get all employees of the company.
 * Clock-in:
   - GET
+    - `/clock-ins/with-emp` : Get tất cả employee cùng clock-in trong ngày nếu có (prop `clockIn` trong mỗi element), nếu không có sẽ không có prop `clockIn`.<br>
     - `/clock-ins/id/:empid` : Get tất cả clock in của 1 nhân viên bằng **ObjectID**.<br>
     - `/clock-ins/comp/:compid/:workid` : Get tất cả clock in của 1 nhân viên bằng **WorkID** (phải kèm theo ID company).<br>
     - `/clock-ins/comp/:compid` : Get tất cả clock in của 1 công ty bằng **ObjectID** của công ty đó.<br>
@@ -49,6 +50,9 @@
   - POST    `/salaries/` (body: `ISalary`) : Tạo salary dựa trên lần trả lương cuối cùng của nhân viên, nếu nhân viên chưa từng được trả lương thì dùng ngày bắt đầu làm của nhân viên làm mốc: nhân viên được trả lương theo tháng thì phải ít nhất 1 tháng sau lần trả lương cuối cùng mới có thể thêm salary mới, nhân viên hưởng lương giờ thì tự do tạo salary.
   - PUT     `/salaries/:id` (body: `ISalary`) : Update salary, chỉ được update các prop `{ salary, otSalary }`.
   - DELETE  `/salaries/:id` : Tương tự penalty.
+* Company:
+  - PUT     `/company` : Cập nhật thông tin cty, bao gồm tên (`name`), địa chỉ (`address`), số điện thoại (`phone`).
+  - PUT     `/company/rules` : Cập nhật các quy định của cty, bao gồm giờ bắt đầu làm (`startWork`), giờ tan làm (`endWork`), thời gian cho phép đi trễ (`allowedLateTime`), thời gian đi trễ tối đa (`maxLateTime`). **LƯU Ý:** các khoảng thời gian cho phép đi trễ và thời gian đi trễ tối đa phải dùng giá trị không có timezone, do ta chỉ quan tâm tới khoảng thời gian chứ không quan tâm mốc thời gian.
 * Reports:
   - GET     `/reports/comp/:compid` : GET tất cả report của công ty bằng **ObjectID**.
   - POST    `/reports/:compid` (body: `{ startDate: string, endDate: string }`) : Tổng hợp báo cáo cho công ty; nếu có request body thì sẽ dùng khoảng thời gian đó để tổng hợp báo cáo, nếu không có request body thì mặc định khoảng thời gian là tháng hiện tại.
