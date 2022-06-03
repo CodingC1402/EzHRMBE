@@ -123,9 +123,12 @@ export default class ClockInController {
 
     public static async createClockIn(req: Request<{}, {}, {employeeID: string}>, res: Response) {
         try {
-            let employee = await EmployeeModel.findOne({ _id: req.body.employeeID });
+            let employee = await EmployeeModel.findOne({ 
+                _id: req.body.employeeID,
+                resignDate: { $exists: false }
+            });
             if (!employee) {
-                responseMessage(res, 'Employee with such ID not found.', Status.NOT_FOUND);
+                responseMessage(res, 'Employee with such ID not found or has resigned.', Status.NOT_FOUND);
                 return;
             }
 
