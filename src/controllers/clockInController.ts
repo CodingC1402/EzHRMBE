@@ -12,6 +12,42 @@ import { DateTime } from "luxon";
 
 export default class ClockInController {
 
+    public static async getAllEmployeesWithClockIn(req: Request, res: Response) {
+        try {
+            let result = await EmployeeModel.aggregate([
+                { $match: {
+                    companyID: new mongoose.Types.ObjectId(req.session.companyID),
+                    resignDate: { $exists: false }
+                } },
+                { $lookup: {
+                    from: "clockins",
+                    let: { eid: "$_id" },
+                    pipeline: [
+                        { $match: {
+                            $and: [
+                                { $expr: { $eq: [ "$employeeID", "$$eid" ] } },
+                                { clockedIn:
+                                    { $gte: 
+                                        DateTime
+                                            .now()
+                                            .startOf('day') 
+                                    }
+                                }
+                            ]
+                        } }
+                    ],
+                    as: "clockIn"
+                } },
+                { $unwind: {
+                    path: "$clockIn",
+                    preserveNullAndEmptyArrays: true
+                } }
+            ]);
+
+            res.status(Status.OK).json(result);
+        } catch (error) { handleError(res, error as Error); }
+    }
+
     public static async getAccumulatedWorkHoursByEmployeeID(req: Request<{empid: string}>, res: Response) {
         try {
             let aggre = ClockInModel.aggregate([
