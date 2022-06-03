@@ -131,7 +131,7 @@ export default class RolesController {
           user
         )
           .then(() => {
-            res.status(Status.OK).json("UPDATE_HOLIDAY_SUCCESS");
+            res.status(Status.OK).json(user.company.roles);
           })
           .catch((err: Error) => {
             responseMessage(res, err.message, Status.BAD_REQUEST);
