@@ -19,8 +19,8 @@ export default class ClockInController {
                     $and: [
                         { companyID: new mongoose.Types.ObjectId(req.session.companyID) },
                         { $or: [
-                            { resignDate: { $exists: false } },
-                            { resignDate: { $gt: DateTime.now().endOf('day') } }
+                            { resignDate: { $gt: DateTime.now().endOf('day') } },
+                            { resignDate: null }
                         ] }
                     ]
                 } },
@@ -132,7 +132,7 @@ export default class ClockInController {
                 $and: [
                     { _id: req.body.employeeID },
                     { $or: [
-                        { resignDate: { $exists: false } },
+                        { resignDate: null },
                         { resignDate: { $gt: DateTime.now().endOf('day') } }
                     ] }
                 ]
