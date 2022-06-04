@@ -9,6 +9,8 @@ import responseMessage from "../utils/responseError";
 import { LeavesModel } from "../models/leavesModel";
 import { objectUtils } from "../utils/objectUtils";
 import { controller } from "../database/controller";
+import { UserModel } from "../models/userModel";
+import { IRole } from "../models/rolesModel";
 
 const EMPLOYEE_DOESNT_EXIST = "Employee doesn't exists";
 const NO_PERMISSION_MESSAGE = "You don't have permission for this employee";
@@ -41,14 +43,21 @@ export default class EmployeeController {
 
     let employee = new EmployeeModel({
       ...req.body,
-      roleID: undefined,
       companyID: req.session.companyID,
     });
 
     await employee
       .save()
-      .then((doc) => {
-        res.status(Status.CREATED).json(doc.toObject());
+      .then(async (doc) => {
+        let docObj = doc.toObject();
+        (docObj as any).role = 
+          await getRoleById(
+            docObj.roleID.toString(), 
+            req.session.companyID!
+          );
+        
+        const { roleID, ...emp } = docObj;
+        res.status(Status.CREATED).json(emp);
       })
       .catch((error) => {
         responseMessage(res, error.toString(), Status.BAD_REQUEST);
@@ -203,4 +212,16 @@ export default class EmployeeController {
 
     return employee;
   }
+}
+
+async function getRoleById(
+  id: string, 
+  companyID: string
+) : Promise<IRole | undefined> {
+  let user = await UserModel.findOne({
+    "company._id": companyID
+  });
+  return user?.company.roles.find(
+    (role: any) => role._id.toString() === id
+  );
 }
