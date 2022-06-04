@@ -16,8 +16,13 @@ export default class ClockInController {
         try {
             let result = await EmployeeModel.aggregate([
                 { $match: {
-                    companyID: new mongoose.Types.ObjectId(req.session.companyID),
-                    resignDate: { $exists: false }
+                    $and: [
+                        { companyID: new mongoose.Types.ObjectId(req.session.companyID) },
+                        { $or: [
+                            { resignDate: { $exists: false } },
+                            { resignDate: { $gt: DateTime.now().endOf('day') } }
+                        ] }
+                    ]
                 } },
                 { $lookup: {
                     from: "clockins",
@@ -124,8 +129,13 @@ export default class ClockInController {
     public static async createClockIn(req: Request<{}, {}, {employeeID: string}>, res: Response) {
         try {
             let employee = await EmployeeModel.findOne({ 
-                _id: req.body.employeeID,
-                resignDate: { $exists: false }
+                $and: [
+                    { _id: req.body.employeeID },
+                    { $or: [
+                        { resignDate: { $exists: false } },
+                        { resignDate: { $gt: DateTime.now().endOf('day') } }
+                    ] }
+                ]
             });
             if (!employee) {
                 responseMessage(res, 'Employee with such ID not found or has resigned.', Status.NOT_FOUND);
