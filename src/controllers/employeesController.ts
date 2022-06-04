@@ -9,6 +9,9 @@ import responseMessage from "../utils/responseError";
 import { LeavesModel } from "../models/leavesModel";
 import { objectUtils } from "../utils/objectUtils";
 import { controller } from "../database/controller";
+import { UserModel } from "../models/userModel";
+import { IRole } from "../models/rolesModel";
+import mongoose from "mongoose";
 
 const EMPLOYEE_DOESNT_EXIST = "Employee doesn't exists";
 const NO_PERMISSION_MESSAGE = "You don't have permission for this employee";
@@ -41,14 +44,15 @@ export default class EmployeeController {
 
     let employee = new EmployeeModel({
       ...req.body,
-      roleID: undefined,
       companyID: req.session.companyID,
     });
 
     await employee
       .save()
-      .then((doc) => {
-        res.status(Status.CREATED).json(doc.toObject());
+      .then(async (doc) => {
+        let docObj = doc.toObject();
+        let roledEmp = await assignRole(docObj);
+        res.status(Status.CREATED).json(roledEmp);
       })
       .catch((error) => {
         responseMessage(res, error.toString(), Status.BAD_REQUEST);
@@ -77,18 +81,23 @@ export default class EmployeeController {
     }
 
     try {
-      await EmployeeModel.findOneAndUpdate({_id: employee._id}, req.body);
+      let newEmployee = await EmployeeModel.findOneAndUpdate(
+        { _id: employee._id }, 
+        req.body, 
+        { new: true }
+      );
+      
+      let leanEmployee = newEmployee!.toObject();
+      let roledEmployee = await assignRole(leanEmployee);
+      EmployeeController.sendOk(
+        res,
+        roledEmployee
+      );
     } catch (error) {
       //@ts-ignore
       responseMessage(res, error.toString(), Status.BAD_REQUEST);
       return;
     }
-
-    let leanEmployee = employee.toObject();
-    EmployeeController.sendOk(
-      res,
-      objectUtils.update(leanEmployee, req.body)
-    );
   });
 
   public static readonly deleteEmployee = controller.createFunction(
@@ -118,19 +127,21 @@ export default class EmployeeController {
         companyID: req.session.companyID,
       }).lean();
 
-      for (let i = 0; i < employees.length; i++) {
-        let employee = employees[i];
-        employee.leaves = await LeavesModel.find({
-          employeeID: employee._id,
-        }).lean();
+      let detailedEmployees = await Promise.all(
+        employees.map(async (e) => {
+          e.leaves = await LeavesModel.find({
+            employeeID: e._id,
+          }).lean();
 
-        /**
-         * ADD ALL OTHER DETAIL HERE
-         */
+          /**
+           * ADD ALL OTHER DETAIL HERE
+          */
 
-      }
+          return await assignRole(e);
+        })
+      );
 
-      EmployeeController.sendOk(res, employees || []);
+      EmployeeController.sendOk(res, detailedEmployees || []);
     }
   );
 
@@ -140,7 +151,11 @@ export default class EmployeeController {
         companyID: req.session.companyID,
       }).lean();
 
-      EmployeeController.sendOk(res, employees || []);
+      let roledEmployees = await Promise.all(
+        employees.map(assignRole)
+      );
+
+      EmployeeController.sendOk(res, roledEmployees || []);
     }
   );
 
@@ -203,4 +218,31 @@ export default class EmployeeController {
 
     return employee;
   }
+}
+
+async function getRoleById(
+  id: string | mongoose.Types.ObjectId, 
+  companyID: string | mongoose.Types.ObjectId
+) : Promise<IRole | undefined> {
+  let user = await UserModel.findOne({
+    "company._id": companyID
+  });
+
+  if (id instanceof mongoose.Types.ObjectId)
+    id = id.toString();
+  
+  return user?.company.roles.find(
+    (role: any) => role._id.toString() === id
+  );
+}
+
+async function assignRole(employee: IEmployee): Promise<Omit<IEmployee, "roleID">> {
+  (employee as any)
+    .role = 
+      await getRoleById(
+        employee.roleID, 
+        employee.companyID
+      );
+  const { roleID, ...e } = employee;
+  return e;
 }

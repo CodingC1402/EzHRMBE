@@ -129,7 +129,8 @@ export default class SalaryController {
                 { $set: {
                     salary: req.body.salary,
                     otSalary: req.body.otSalary
-                } }
+                } },
+                { new: true }
             );
             if (!updated) {
                 throw new Error("Cannot find a salary record with specified Id.");
