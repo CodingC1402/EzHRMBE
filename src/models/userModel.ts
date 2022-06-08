@@ -5,7 +5,7 @@ export interface IUser {
   username: string;
   password: string;
   email: string;
-  verified?: boolean;
+  verified: boolean;
   company: ICompany;
 }
 

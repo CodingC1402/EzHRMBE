@@ -15,7 +15,7 @@ export default class SessionAuthentication {
 
     for (let i = 0; i < IGNORE_PATHS.length; i++) {
       let path = IGNORE_PATHS[i];
-      if (urlArr[1] === path) {
+      if (urlArr[1].split('?')[0] === path) {
         return true;
       }
     }

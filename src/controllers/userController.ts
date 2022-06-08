@@ -30,8 +30,10 @@ export default class UserController {
       username: username,
       password: encryptedPassword,
       email: email,
+      verified: false,
       company: DefaultCompany,
     });
+
     try {
       let info = {
         ...(await user.save()).toObject(),
@@ -45,7 +47,7 @@ export default class UserController {
       responseMessage(res, error.message, Status.BAD_REQUEST);
     }
   });
-
+  
   public static readonly getUser = controller.createFunction(async function (req: Request, res: Response, next: NextFunction) {
     const user = await UserModel.findOne({ username: req.session.username })
       .select("-password")

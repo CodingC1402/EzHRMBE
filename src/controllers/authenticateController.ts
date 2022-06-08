@@ -3,11 +3,18 @@ import bcrypt from "bcrypt";
 import UserController from "./userController";
 import { checkEmail, checkString } from "../utils/stringCheck";
 import { PASSWORD_RULES, USERNAME_RULES } from "../configurations/namingRules";
-import { Request, Response, NextFunction } from "express";
+import { Request, Response, NextFunction, response } from "express";
 import Status from "../configurations/status";
-import responseMessage from "../utils/responseError";
+import responseMessage, { handleError } from "../utils/responseError";
 import SessionAuthentication from "../security/session";
 import { controller } from "../database/controller";
+import { StrUtils } from "../utils/strUtils";
+import { GenerateNewToken, PendingRequestModel, RequestType } from "../models/pendingRequest";
+import { EmailUtils } from "../utils/emailUtils";
+import { SALT_ROUNDS } from "../configurations/security";
+import mongoose from "mongoose";
+import session from "express-session";
+import { SessionModel } from "../models/sessionModel";
 
 type loginInfo = {
 	username: string,
@@ -31,7 +38,7 @@ export default class AuthenticateController {
   });
 
   public static readonly Login = controller.createFunction<void, {}, {}, loginInfo>(async function (req, res, next) {
-	const { username, password } = req.body;
+	  const { username, password } = req.body;
     const sessionUsername: string | undefined = req.session.username;
 
     if (sessionUsername === username) {
@@ -57,6 +64,10 @@ export default class AuthenticateController {
       return;
     }
 
+    if (!user.verified) {
+      res.status(Status.UNAUTHORIZED).json("Please verify your email before login.");
+      return;
+    }
     const isPassCorrect = await bcrypt.compare(password, user.password);
     if (!isPassCorrect) {
       failedLogin();
@@ -90,7 +101,18 @@ export default class AuthenticateController {
       return responseMessage(res, "Invalid Email", Status.BAD_REQUEST);
     }
 
-    UserController.createUser(req, res, next);
+    await UserController.createUser(req, res, next);
+    if (res.statusCode !== Status.CREATED) return;
+
+    let pendingRequest = new PendingRequestModel({
+      type: RequestType.VERIFY_EMAIL,
+      data: username,
+      token: await GenerateNewToken(),
+    });
+    pendingRequest.save();
+    let token = pendingRequest.id;
+
+    EmailUtils.SendVerifyEmail(email, token);
   })
 
   public static readonly Logout = controller.createFunction(async function (req, res, next) {
@@ -99,4 +121,71 @@ export default class AuthenticateController {
       else res.status(Status.NO_CONTENT).send();
     });
   })
+
+  public static VerifyEmail = controller.createFunction(async function (req: Request<{}, {}, {}, {token: string}>, res: Response) {
+    const pendingRequest = await PendingRequestModel.findOne({token: req.query.token});
+    if (!pendingRequest || pendingRequest.type!== RequestType.VERIFY_EMAIL) {
+      responseMessage(res, "Request not found", Status.NOT_FOUND);
+      return;
+    }
+
+    const user = await UserModel.findOne({username: pendingRequest.data});
+    if (!user) {
+      responseMessage(res, "User not found", Status.NOT_FOUND);
+      return;
+    }
+
+    user.verified = true;
+    user.save();
+
+    pendingRequest.remove();
+    responseMessage(res, "Email verified", Status.OK);
+  });
+
+  public static ChangePassword = controller.createFunction(async function (req: Request<{}, {}, {password: string}, {token: string, logout: boolean}>, res) {
+    const pendingRequest = await PendingRequestModel.findOne({token: req.query.token});
+    if (!pendingRequest || pendingRequest.type!== RequestType.CHANGE_PASSWORD) {
+      responseMessage(res, "Request not found", Status.NOT_FOUND);
+      return;
+    }
+
+    const user = await UserModel.findOne({username: pendingRequest.data});
+    if (!user) {
+      responseMessage(res, "User not found", Status.NOT_FOUND);
+      return;
+    }
+
+    if (!checkString(req.body.password, PASSWORD_RULES)) {
+      return responseMessage(res, "Invalid password", Status.BAD_REQUEST);
+    }
+
+    user.password = bcrypt.hashSync(req.body.password, SALT_ROUNDS);
+    user.save();
+ 
+    if (req.query.logout) {
+      await SessionModel.deleteMany({session: { $regex: `"username":"${user.username}"` }});
+    }
+
+    pendingRequest.remove();
+    responseMessage(res, "user's password is changed", Status.OK);
+  });
+
+  public static RequestPasswordChange = controller.createFunction(async function (req: Request<{}, {}, {}, {username: string}>, res) {
+    const user = await UserModel.findOne({username: req.query.username}).lean();
+    if (!user) {
+      responseMessage(res, "User not found", Status.NOT_FOUND);
+      return;
+    }
+
+    let pendingRequest = new PendingRequestModel({
+      type: RequestType.CHANGE_PASSWORD,
+      data: req.query.username,
+      token: await GenerateNewToken(),
+    });
+    pendingRequest.save();
+    let token = pendingRequest.id;
+
+    EmailUtils.SendChangePasswordEmail(user.email, token);
+    responseMessage(res, "mail has been sent to user's email", Status.OK);
+  });
 }
