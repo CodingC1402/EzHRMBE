@@ -9,7 +9,7 @@ import responseMessage, { handleError } from "../utils/responseError";
 import SessionAuthentication from "../security/session";
 import { controller } from "../database/controller";
 import { StrUtils } from "../utils/strUtils";
-import { PendingRequestModel, RequestType } from "../models/pendingRequest";
+import { GenerateNewToken, PendingRequestModel, RequestType } from "../models/pendingRequest";
 import { EmailUtils } from "../utils/emailUtils";
 import { SALT_ROUNDS } from "../configurations/security";
 import mongoose from "mongoose";
@@ -106,7 +106,8 @@ export default class AuthenticateController {
 
     let pendingRequest = new PendingRequestModel({
       type: RequestType.VERIFY_EMAIL,
-      data: username
+      data: username,
+      token: await GenerateNewToken(),
     });
     pendingRequest.save();
     let token = pendingRequest.id;
@@ -122,8 +123,8 @@ export default class AuthenticateController {
   })
 
   public static VerifyEmail = controller.createFunction(async function (req: Request<{}, {}, {}, {token: string}>, res: Response) {
-    const pendingRequest = await PendingRequestModel.findById(req.query.token);
-    if (!pendingRequest) {
+    const pendingRequest = await PendingRequestModel.findOne({token: req.query.token});
+    if (!pendingRequest || pendingRequest.type!== RequestType.VERIFY_EMAIL) {
       responseMessage(res, "Request not found", Status.NOT_FOUND);
       return;
     }
@@ -142,8 +143,8 @@ export default class AuthenticateController {
   });
 
   public static ChangePassword = controller.createFunction(async function (req: Request<{}, {}, {password: string}, {token: string, logout: boolean}>, res) {
-    const pendingRequest = await PendingRequestModel.findById(req.query.token);
-    if (!pendingRequest) {
+    const pendingRequest = await PendingRequestModel.findOne({token: req.query.token});
+    if (!pendingRequest || pendingRequest.type!== RequestType.CHANGE_PASSWORD) {
       responseMessage(res, "Request not found", Status.NOT_FOUND);
       return;
     }
@@ -162,8 +163,7 @@ export default class AuthenticateController {
     user.save();
  
     if (req.query.logout) {
-      const session = await SessionModel.find({});
-      console.log(session.length);
+      await SessionModel.deleteMany({session: { $regex: `"username":"${user.username}"` }});
     }
 
     pendingRequest.remove();
@@ -179,7 +179,8 @@ export default class AuthenticateController {
 
     let pendingRequest = new PendingRequestModel({
       type: RequestType.CHANGE_PASSWORD,
-      data: req.query.username
+      data: req.query.username,
+      token: await GenerateNewToken(),
     });
     pendingRequest.save();
     let token = pendingRequest.id;
