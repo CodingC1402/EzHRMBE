@@ -11,6 +11,8 @@ import { controller } from "../database/controller";
 import { StrUtils } from "../utils/strUtils";
 import { PendingRequestModel, RequestType } from "../models/pendingRequest";
 import { EmailUtils } from "../utils/emailUtils";
+import { SALT_ROUNDS } from "../configurations/security";
+import mongoose from "mongoose";
 
 type loginInfo = {
 	username: string,
@@ -137,11 +139,47 @@ export default class AuthenticateController {
     responseMessage(res, "Email verified", Status.OK);
   });
 
-  public static ChangePassword = controller.createFunction(async function (req: Request<{}, {}, {}, {token: string, password: string, username: string}>, res) {
-    
+  public static ChangePassword = controller.createFunction(async function (req: Request<{}, {}, {password: string}, {token: string, logout: boolean}>, res) {
+    const pendingRequest = await PendingRequestModel.findById(req.query.token);
+    if (!pendingRequest) {
+      responseMessage(res, "Request not found", Status.NOT_FOUND);
+      return;
+    }
+
+    const user = await UserModel.findOne({username: pendingRequest.data});
+    if (!user) {
+      responseMessage(res, "User not found", Status.NOT_FOUND);
+      return;
+    }
+
+    if (!checkString(req.body.password, PASSWORD_RULES)) {
+      return responseMessage(res, "Invalid password", Status.BAD_REQUEST);
+    }
+
+    user.password = bcrypt.hashSync(req.body.password, SALT_ROUNDS);
+    user.save();
+
+    if (req.query.logout) {
+      // Remove the session
+    }
+
+    pendingRequest.remove();
   });
 
   public static RequestPasswordChange = controller.createFunction(async function (req: Request<{}, {}, {}, {username: string}>, res) {
+    const user = await UserModel.findOne({username: req.query.username}).lean();
+    if (!user) {
+      responseMessage(res, "User not found", Status.NOT_FOUND);
+      return;
+    }
 
+    let pendingRequest = new PendingRequestModel({
+      type: RequestType.CHANGE_PASSWORD,
+      data: req.query.username
+    });
+    pendingRequest.save();
+    let token = pendingRequest.id;
+
+    EmailUtils.SendChangePasswordEmail(user.email, token);
   });
 }

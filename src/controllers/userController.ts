@@ -47,7 +47,7 @@ export default class UserController {
       responseMessage(res, error.message, Status.BAD_REQUEST);
     }
   });
-
+  
   public static readonly getUser = controller.createFunction(async function (req: Request, res: Response, next: NextFunction) {
     const user = await UserModel.findOne({ username: req.session.username })
       .select("-password")
