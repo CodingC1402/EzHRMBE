@@ -16,6 +16,10 @@
   - DELETE  `/logout`
   - POST    `/register` (body: `{ username, password, email }`)
   - GET     `/profile` : Get user info with the company and all sub documents.
+
+  - PUT     `/verify?token=<token>` : Verify user email.
+  - POST    `/password-change` : Send mail to user email with a link contain token as query.
+  - PUT     `/password-change?token=<token>` : Change the user's password with the password in req's BODY
 * Employees (/api/v1):
   - PUT     `/employees/:id` : Update an employee with **ObjectID**.
   - POST    `/employees/create` : Create new employee
