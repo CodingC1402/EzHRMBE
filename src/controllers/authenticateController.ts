@@ -13,6 +13,8 @@ import { PendingRequestModel, RequestType } from "../models/pendingRequest";
 import { EmailUtils } from "../utils/emailUtils";
 import { SALT_ROUNDS } from "../configurations/security";
 import mongoose from "mongoose";
+import session from "express-session";
+import { SessionModel } from "../models/sessionModel";
 
 type loginInfo = {
 	username: string,
@@ -158,12 +160,14 @@ export default class AuthenticateController {
 
     user.password = bcrypt.hashSync(req.body.password, SALT_ROUNDS);
     user.save();
-
+ 
     if (req.query.logout) {
-      // Remove the session
+      const session = await SessionModel.find({});
+      console.log(session.length);
     }
 
     pendingRequest.remove();
+    responseMessage(res, "user's password is changed", Status.OK);
   });
 
   public static RequestPasswordChange = controller.createFunction(async function (req: Request<{}, {}, {}, {username: string}>, res) {
@@ -181,5 +185,6 @@ export default class AuthenticateController {
     let token = pendingRequest.id;
 
     EmailUtils.SendChangePasswordEmail(user.email, token);
+    responseMessage(res, "mail has been sent to user's email", Status.OK);
   });
 }

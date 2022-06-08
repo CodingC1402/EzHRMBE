@@ -19,6 +19,7 @@ import salaryRouter from "./routes/salaryRouter";
 import reportRouter from "./routes/reportRouter";
 import rolesRouter from "./routes/rolesRouter";
 import companyRouter from "./routes/companyRouter";
+import { SESSION_COLLECTION } from "./models/sessionModel";
 require("dotenv/config");
 
 const server = express();
@@ -33,7 +34,7 @@ server.use(
     saveUninitialized: false,
     store: MongoStore.create({
       mongoUrl: Env.DB_CONNECTION,
-      collectionName: "connectSessions",
+      collectionName: SESSION_COLLECTION,
     }),
     cookie: {
       secure: false,
