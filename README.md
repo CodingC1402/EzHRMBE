@@ -17,9 +17,9 @@
   - POST    `/register` (body: `{ username, password, email }`)
   - GET     `/profile` : Get user info with the company and all sub documents.
 
+  - POST    `/password-change?username=<username>` : Send mail to user email with a link contain token as query.
   - PUT     `/verify?token=<token>` : Verify user email.
-  - POST    `/password-change` : Send mail to user email with a link contain token as query.
-  - PUT     `/password-change?token=<token>` : Change the user's password with the password in req's BODY
+  - PUT     `/password-change?token=<token>&logout=<logout bool>` : Change the user's password with the password in req's BODY, if logout is true then all the session of that user stored in database will be removed.
 * Employees (/api/v1):
   - PUT     `/employees/:id` : Update an employee with **ObjectID**.
   - POST    `/employees/create` : Create new employee
