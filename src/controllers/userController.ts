@@ -30,8 +30,10 @@ export default class UserController {
       username: username,
       password: encryptedPassword,
       email: email,
+      verified: false,
       company: DefaultCompany,
     });
+
     try {
       let info = {
         ...(await user.save()).toObject(),

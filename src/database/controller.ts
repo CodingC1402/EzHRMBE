@@ -1,5 +1,6 @@
 import { Connection } from "./connection";
 import { NextFunction, Request, Response } from "express";
+import { handleError } from "../utils/responseError";
 
 export namespace controller {
   /**
@@ -22,7 +23,10 @@ export namespace controller {
     ) {
       try {
         await Connection.openConnection();
-        await fn(req, res, next);
+        return await fn(req, res, next);
+      } catch (e) {
+        handleError(res, e as Error);
+        return null;
       } finally {
         await Connection.closeConnection();
       }
