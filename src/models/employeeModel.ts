@@ -34,7 +34,7 @@ export interface IEmployeeFullDetail extends IEmployee {
 }
 
 export const EmployeeSchema = new mongoose.Schema<IEmployee>({
-  workID: { type: Number, required: true, unique: true, immutable: true },
+  workID: { type: Number, required: true, immutable: true },
   firstName: { type: String, required: true },
   lastName: { type: String, required: true },
   email: { type: String, required: true },
@@ -46,6 +46,9 @@ export const EmployeeSchema = new mongoose.Schema<IEmployee>({
   companyID: { type: mongoose.Schema.Types.ObjectId, required: true, immutable: true },
   paymentDue: { type: Boolean, required: false }
 })
+
+// Index
+EmployeeSchema.index({ workID: 1, companyID: 1 }, { unique: true });
 
 
 // Middle ware
