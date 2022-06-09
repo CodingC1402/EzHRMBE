@@ -99,7 +99,7 @@ export default class LeavesController {
       req.body,
       { new: true }
     )
-    .then(() => {
+    .then((leave) => {
       res.status(Status.OK).json(leave);
     })
     .catch((err: Error) => {
