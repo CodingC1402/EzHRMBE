@@ -4,9 +4,11 @@ import { EmployeeModel } from '../models/employeeModel';
 import { LeavesModel, LeaveType } from '../models/leavesModel';
 import { PenaltyModel } from "../models/penaltiesModel";
 import { HolidayModel } from "../models/holidayModel";
-import { SalaryModel } from "../models/salariesModel";
-import { IRole, PaymentPeriod } from "../models/rolesModel";
-import { DateTime, Duration } from "luxon";
+import { PaymentPeriod } from "../models/rolesModel";
+import { DateTime } from "luxon";
+import { compileReport, updateReport } from "../controllers/reportController";
+import { ReportModel } from "../models/reportModel";
+import { UserModel } from '../models/userModel';
 
 // change timestamp back to 00:00:00 in production, now running once per 10 seconds for testing purposes
 let timeToRun = '0 0 0 * * *';
@@ -18,14 +20,19 @@ let task = cron.schedule(timeToRun, async () => {
     try {
         await ClockInModel.updateMany(
             { clockedOut: { $exists: false } }, 
-            { clockedOut: new Date() }
+            { clockedOut: DateTime.now() }
         );
     } catch (error) { logError('ClockInModel.updateMany()'); }
 
     // 2 - check for employee's payments due
     try {
         let employees = await EmployeeModel.aggregate([
-            { $match: { resignDate: { $exists: false } } },
+            { $match: {
+                $or: [
+                    { resignDate: null },
+                    { resignDate: { $gt: DateTime.now().endOf('day') } }
+                ]
+            } },
             { $lookup: {
                 from: "salaries",
                 let: { eid: "$_id" },
@@ -91,7 +98,7 @@ let task = cron.schedule(timeToRun, async () => {
         console.log(`${DateTime.now().toLocaleString()} is payday for ${updateIDs.length} employees, marked as payment due.`);
     } catch (error) { logError('various functions', 'checking payments due', error); }
 
-    // 3 - check if today is a holiday
+    // 3 - check if passed day is a holiday
     let yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
         yesterday.setHours(0,0,0,0);
@@ -130,7 +137,7 @@ let task = cron.schedule(timeToRun, async () => {
         if (holidays.length) {
             console.log(`${yesterday.toLocaleDateString()} is part of a holiday, no absent check will be performed. Holidays details:`);
             console.log(holidays);
-            compileClockInReport();
+            compileMonthlyReport();
             return;
         }
     } catch (error) { logError('HolidayModel.find()', 'Holiday check', error); }
@@ -145,7 +152,13 @@ let task = cron.schedule(timeToRun, async () => {
             { $project: { _id: true } }
         ]);
         let absentees = await EmployeeModel.find({
-            _id: { $nin: attendantIDs }
+            $and: [
+                { _id: { $nin: attendantIDs } },
+                { $or: [
+                    { resignDate: null },
+                    { resignDate: { $gt: DateTime.now().endOf('day') } }
+                ] }
+            ]
         });
         
         yesterday.setHours(23, 59, 0); // so that penalty.occurredAt will be at 23:59:00 yesterday
@@ -185,12 +198,29 @@ let task = cron.schedule(timeToRun, async () => {
     } catch (error) { logError('various functions', 'processing absence penalty', error); }
 
     // 5 - update monthly report on clock in/out
-    compileClockInReport();
+    compileMonthlyReport();
 });
 
-function compileClockInReport() {
-    // compile monthly reports
-    //
+export async function compileMonthlyReport() {
+    let currentReport = await ReportModel.findOne({
+        compileDate: { $lte: DateTime.now() },
+        compiledUpTo: { $gte: DateTime.now() }
+    });
+    if (currentReport) {
+        await updateReport(currentReport.id);
+    }
+    else {
+        let companies = 
+            await UserModel
+                .find({})
+                .select("-_id company._id");
+        for (let company of companies) {
+            let report = await compileReport(company.company._id!.toString());
+            let repModel = new ReportModel(report);
+            await repModel.save();
+            // console.log(repModel.toJSON());
+        }
+    }
 }
 
 function logError(fn?: string, phase?: string, error?: any): void {
