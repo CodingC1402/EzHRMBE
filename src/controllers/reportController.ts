@@ -20,8 +20,17 @@ export default class ReportController {
                 query = addDateRangeFilter(req, query, "compileDate");
             } else if (!req.query.startDate && !req.query.endDate && req.query.month) {
                 query.where({
-                    $expr: {
-                        $eq: [ { $month: "$compileDate" }, req.query.month ]
+                    compileDate: {
+                        $gte:
+                            DateTime
+                            .now()
+                            .set({ month: Number(req.query.month) })
+                            .startOf('month'),
+                        $lte:
+                            DateTime
+                            .now()
+                            .set({ month: Number(req.query.month) })
+                            .endOf('month')
                     }
                 });
             } else {
@@ -97,8 +106,20 @@ export async function compileReport(
     endDate?: string
 ): Promise<IReport>
 {
+    let s = DateTime.fromISO(startDate as string)
+    let e = DateTime.fromISO(endDate as string);
+    let start = s.isValid ? s : DateTime.now();
+    let end = 
+        e.isValid ?
+            e : start
+                .plus({ months: 1 })
+                .minus({ days: 1 });
+    start = start.startOf('day');
+    end = end.endOf('day');
+
     let employees = await EmployeeModel.find({
-        companyID: new mongoose.Types.ObjectId(compid)
+        companyID: new mongoose.Types.ObjectId(compid),
+        startDate: { $lte: end }
     });
     let employeeIDs = employees.map((e) => new mongoose.Types.ObjectId(e.id));
 
@@ -110,14 +131,6 @@ export async function compileReport(
             } 
         }
     ]);
-
-    let s = DateTime.fromISO(startDate as string)
-    let e = DateTime.fromISO(endDate as string);
-    let start = s.isValid ? s : DateTime.now();
-    let end = e.isValid ?
-                e : start
-                    .plus({ months: 1 })
-                    .minus({ days: 1 });
 
     penAggr = addDateRangeFilterAggregate(
         start,
@@ -143,8 +156,7 @@ export async function compileReport(
         let empStart = DateTime
                     .fromJSDate(e.startDate)
                     .startOf("day");
-            return start.startOf("day") <= empStart
-                    && empStart <= end.startOf("day");
+            return start <= empStart && empStart <= end;
     });
     let resigned = employees.filter((e) => {
         if (!e.resignDate) return false;
@@ -152,14 +164,13 @@ export async function compileReport(
             let resign = DateTime
                     .fromJSDate(e.resignDate)
                     .startOf("day");
-                return start.startOf("day") <= resign
-                            && resign <= end.startOf("day");
+                return start <= resign && resign <= end;
         }
     });
     let currentStaff = employees.filter((e) => {
         return !e.resignDate || DateTime
                             .fromJSDate(e.resignDate)
-                            .startOf("day") > end.startOf("day");
+                            .startOf("day") > end;
     });
 
     let late = pens.find((p) => p._id === BasePenaltyTypes.Late);
