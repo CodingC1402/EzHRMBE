@@ -54,22 +54,9 @@ export default class ReportController {
 
     public static async updateReport(req: Request<{ id: string }>, res: Response) {
         try {
-            let existingReport = await ReportModel.findById(req.params.id);
-            if (!existingReport) {
-                throw new Error("Cannot find report with specified Id.");
-            }
-            let update = await compileReport(
-                existingReport.companyID.toString(),
-                existingReport.compileDate.toISOString(),
-                existingReport.compiledUpTo.toISOString()
-            );
-            let updatedReport = await ReportModel.findByIdAndUpdate(
-                { _id: existingReport.id }, 
-                {...update},
-                { new: true }
-            );
+            let updated = await updateReport(req.params.id);
             
-            res.status(Status.OK).json(updatedReport);
+            res.status(Status.OK).json(updated);
         } catch (error) { handleError(res, error as Error); }
     }
 
@@ -86,7 +73,25 @@ export default class ReportController {
     }
 }
 
-async function compileReport(
+export async function updateReport(id: string) : Promise<IReport | null> {
+    let existingReport = await ReportModel.findById(id);
+    if (!existingReport) {
+        throw new Error("Cannot find report with specified Id.");
+    }
+    let update = await compileReport(
+        existingReport.companyID.toString(),
+        existingReport.compileDate.toISOString(),
+        existingReport.compiledUpTo.toISOString()
+    );
+    let updatedReport = await ReportModel.findByIdAndUpdate(
+        { _id: existingReport.id }, 
+        {...update},
+        { new: true }
+    );
+    return updatedReport;
+}
+
+export async function compileReport(
     compid: string,
     startDate?: string,
     endDate?: string
