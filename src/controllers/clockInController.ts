@@ -160,13 +160,13 @@ export default class ClockInController {
             }
 
             let rules = user.company.rule;
-            let late = new Date().getTime() - new Date().setHours(
-                rules.startWork.getHours(), 
-                rules.startWork.getMinutes(), 
-                rules.startWork.getSeconds()
-            ) - rules.allowedLateTime.getUTCHours()*60*60*1000 
-            - rules.allowedLateTime.getUTCMinutes()*60*1000 
-            - rules.allowedLateTime.getUTCSeconds()*1000 > 0 ? true : false;
+            let late = DateTime.now().toMillis() - DateTime.now().set({
+                hour: rules.startWork.getHours(), 
+                minute: rules.startWork.getMinutes(), 
+                second: rules.startWork.getSeconds()
+            }).toMillis() - rules.allowedLateTime.getHours()*60*60*1000 
+            - rules.allowedLateTime.getHours()*60*1000 
+            - rules.allowedLateTime.getSeconds()*1000 > 0 ? true : false;
 
             let clockIn = new ClockInModel({
                 clockedIn: new Date(),
