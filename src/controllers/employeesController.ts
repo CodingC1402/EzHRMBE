@@ -177,11 +177,12 @@ export default class EmployeeController {
       employee.leaves = await LeavesModel.find({
         employeeID: employee._id,
       }).lean();
-    
+
       //
       // Add other details here
       //
 
+      let roledEmp = await assignRole(employee);
       EmployeeController.sendOk(res, employee);
     }
   );
