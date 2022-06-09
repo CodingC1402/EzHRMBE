@@ -110,17 +110,17 @@ export default class AuthenticateController {
       token: await GenerateNewToken(),
     });
     pendingRequest.save();
-    let token = pendingRequest.id;
+    let token = pendingRequest.token;
 
     EmailUtils.SendVerifyEmail(email, token);
-  })
+  });
 
   public static readonly Logout = controller.createFunction(async function (req, res, next) {
     req.session.destroy((err) => {
       if (err) res.status(Status.BAD_REQUEST).send();
       else res.status(Status.NO_CONTENT).send();
     });
-  })
+  });
 
   public static VerifyEmail = controller.createFunction(async function (req: Request<{}, {}, {}, {token: string}>, res: Response) {
     const pendingRequest = await PendingRequestModel.findOne({token: req.query.token});
@@ -183,7 +183,7 @@ export default class AuthenticateController {
       token: await GenerateNewToken(),
     });
     pendingRequest.save();
-    let token = pendingRequest.id;
+    let token = pendingRequest.token;
 
     EmailUtils.SendChangePasswordEmail(user.email, token);
     responseMessage(res, "mail has been sent to user's email", Status.OK);
