@@ -94,13 +94,17 @@ export default class LeavesController {
       return;
     }
 
-    await LeavesModel.findOneAndUpdate({ _id: leave._id }, req.body)
-      .then(() => {
-        res.status(Status.OK).json(leave);
-      })
-      .catch((err: Error) => {
-        responseMessage(res, err.message, Status.BAD_REQUEST);
-      });
+    await LeavesModel.findOneAndUpdate(
+    { _id: leave._id },
+      req.body,
+      { new: true }
+    )
+    .then(() => {
+      res.status(Status.OK).json(leave);
+    })
+    .catch((err: Error) => {
+      responseMessage(res, err.message, Status.BAD_REQUEST);
+    });
   });
 
   public static readonly getAllLeavesOfEmployee = controller.createFunction(
