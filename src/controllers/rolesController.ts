@@ -102,8 +102,8 @@ export default class RolesController {
     user.company.roles = user.company.roles.map((role: any) => {
       if (role._id.toString() === req.params.id) {
         role.name = req.body.name ? req.body.name : role.name;
-        role.idPrefix = req.body.idPrefix ? req.body.idPrefix : role.idPrefix;
-        role.idPostfix = req.body.idPostfix
+        role.idPrefix = req.body.idPrefix != null ? req.body.idPrefix : role.idPrefix;
+        role.idPostfix = req.body.idPostfix != null
           ? req.body.idPostfix
           : role.idPostfix;
         role.baseSalary = req.body.baseSalary
