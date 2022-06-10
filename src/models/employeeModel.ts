@@ -42,7 +42,7 @@ export const EmployeeSchema = new mongoose.Schema<IEmployee>({
   gender: { type: Number, required: true },
   startDate: {type: Date, required: true},
   resignDate: { type: Date, required: false },
-  roleID: { type: mongoose.Schema.Types.ObjectId }, // Add back required later.
+  roleID: { type: mongoose.Schema.Types.ObjectId, required: true },
   companyID: { type: mongoose.Schema.Types.ObjectId, required: true, immutable: true },
   paymentDue: { type: Boolean, required: false }
 })
